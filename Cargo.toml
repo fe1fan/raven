@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = ["crates/common", "crates/monitor", "crates/server", ]
+
+[workspace.package]
+authors = ["fe1fan"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/fe1fan/raven"
+
+[workspace.dependencies]
+
+[profile.release]
+# Configurations explicitly listed here for clarity.
+# Using the best options for performance.
+opt-level = 'z'
+lto = "fat"
+codegen-units = 1
+strip = "symbols" # Set to `false` for debug information
+debug = false # Set to `true` for debug information
+panic = "abort" # Let it crash and force ourselves to write safe Rust
+
+# Profile used for release mode, but with debugging information for profiling
+# and debugging. Use `cargo build --profile=release-with-debug` to build with this profile.
+[profile.release-with-debug]
+inherits = "release"
+strip = false # Keep debug information in binary
+debug = true # Include maximum amount of debug information
+
+# Profile for `cargo coverage`
+[profile.coverage]
+inherits = "release"
+opt-level = 2 # Compile faster
+codegen-units = 256 # Compile faster
+lto = "thin" # Faster compile time with thin LTO
+debug-assertions = true # Make sure `debug_assert!`s pass
+overflow-checks = true # Catch arithmetic overflow errors
