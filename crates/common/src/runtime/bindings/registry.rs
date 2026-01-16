@@ -35,7 +35,7 @@ impl BindingMethod {
 /// Worker 绑定 trait
 ///
 /// 所有可绑定到 JS 环境的模块都需要实现此 trait
-pub trait WorkerBinding: Send + Sync {
+pub trait NativeBinding: Send + Sync {
     /// 绑定名称（在 JS 中通过全局名称访问，如 KV, UTILS）
     fn name(&self) -> &str;
 
@@ -62,7 +62,7 @@ pub trait WorkerBinding: Send + Sync {
 ///
 /// 管理所有注册的绑定
 pub struct BindingRegistry {
-    bindings: HashMap<String, Box<dyn WorkerBinding>>,
+    bindings: HashMap<String, Box<dyn NativeBinding>>,
 }
 
 impl Default for BindingRegistry {
@@ -84,17 +84,17 @@ impl BindingRegistry {
     /// # Arguments
     /// * `name` - 绑定名称（全局访问名，如 KV, UTILS）
     /// * `binding` - 绑定实现
-    pub fn register(&mut self, name: &str, binding: Box<dyn WorkerBinding>) {
+    pub fn register(&mut self, name: &str, binding: Box<dyn NativeBinding>) {
         self.bindings.insert(name.to_string(), binding);
     }
 
     /// 获取绑定
-    pub fn get(&self, name: &str) -> Option<&dyn WorkerBinding> {
+    pub fn get(&self, name: &str) -> Option<&dyn NativeBinding> {
         self.bindings.get(name).map(|b| b.as_ref())
     }
 
     /// 获取可变绑定引用
-    pub fn get_mut(&mut self, name: &str) -> Option<&mut Box<dyn WorkerBinding>> {
+    pub fn get_mut(&mut self, name: &str) -> Option<&mut Box<dyn NativeBinding>> {
         self.bindings.get_mut(name)
     }
 
@@ -112,7 +112,7 @@ impl BindingRegistry {
     }
 
     /// 移除绑定
-    pub fn remove(&mut self, name: &str) -> Option<Box<dyn WorkerBinding>> {
+    pub fn remove(&mut self, name: &str) -> Option<Box<dyn NativeBinding>> {
         self.bindings.remove(name)
     }
 
@@ -138,7 +138,7 @@ mod tests {
 
     struct MockBinding;
 
-    impl WorkerBinding for MockBinding {
+    impl NativeBinding for MockBinding {
         fn name(&self) -> &str {
             "MOCK"
         }

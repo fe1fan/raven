@@ -1,6 +1,6 @@
 pub mod runtime;
 pub mod workers;
-mod operator;
+pub mod operator;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

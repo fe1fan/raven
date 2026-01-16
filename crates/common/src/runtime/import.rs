@@ -1,7 +1,13 @@
 //! Import 语句解析和绑定创建
 
-use super::bindings::WorkerBinding;
+use super::bindings::NativeBinding;
 use crate::workers::bindings::{KvBinding, UtilsBinding};
+use crate::operator::{
+    UserManagerBinding, 
+    GroupManagerBinding, 
+    PermissionManagerBinding, 
+    SudoManagerBinding
+};
 
 /// 解析脚本中的 import 语句，提取需要的绑定
 pub fn parse_imports(script: &str) -> Vec<(String, String)> {
@@ -46,22 +52,33 @@ pub fn parse_imports(script: &str) -> Vec<(String, String)> {
     imports
 }
 
-/// 根据模块路径创建绑定实例
+/// 根据导入名称和模块路径创建绑定实例
 ///
 /// # 支持的模块
 ///
 /// - `raven/kv` -> `KV` 键值存储
 /// - `raven/utils` -> `UTILS` 工具函数
+/// - `raven/identity` -> `UserManager`, `GroupManager`, `PermissionManager`, `SudoManager` 用户和权限管理
 /// - `raven/db` -> `DB` 数据库（未实现）
-pub fn create_binding_from_module(module_path: &str) -> Option<(String, Box<dyn WorkerBinding>)> {
+pub fn create_binding_from_module(imported_name: &str, module_path: &str) -> Option<Box<dyn NativeBinding>> {
     match module_path {
         "raven/kv" => {
-            let binding = Box::new(KvBinding::memory("KV"));
-            Some(("KV".to_string(), binding))
+            let binding = Box::new(KvBinding::memory(imported_name));
+            Some(binding)
         },
         "raven/utils" => {
-            let binding = Box::new(UtilsBinding::new("UTILS"));
-            Some(("UTILS".to_string(), binding))
+            let binding = Box::new(UtilsBinding::new(imported_name));
+            Some(binding)
+        },
+        "raven/identity" => {
+            // 根据导入的名称创建相应的 Manager
+            match imported_name {
+                "UserManager" => Some(Box::new(UserManagerBinding)),
+                "GroupManager" => Some(Box::new(GroupManagerBinding)),
+                "PermissionManager" => Some(Box::new(PermissionManagerBinding)),
+                "SudoManager" => Some(Box::new(SudoManagerBinding)),
+                _ => None,
+            }
         },
         "raven/db" => {
             // 未来实现数据库绑定
@@ -109,23 +126,33 @@ mod tests {
 
     #[test]
     fn test_create_kv_binding() {
-        let result = create_binding_from_module("raven/kv");
+        let result = create_binding_from_module("KV", "raven/kv");
         assert!(result.is_some());
-        let (name, _binding) = result.unwrap();
-        assert_eq!(name, "KV");
     }
 
     #[test]
     fn test_create_utils_binding() {
-        let result = create_binding_from_module("raven/utils");
+        let result = create_binding_from_module("UTILS", "raven/utils");
         assert!(result.is_some());
-        let (name, _binding) = result.unwrap();
-        assert_eq!(name, "UTILS");
+    }
+
+    #[test]
+    fn test_create_identity_bindings() {
+        assert!(create_binding_from_module("UserManager", "raven/identity").is_some());
+        assert!(create_binding_from_module("GroupManager", "raven/identity").is_some());
+        assert!(create_binding_from_module("PermissionManager", "raven/identity").is_some());
+        assert!(create_binding_from_module("SudoManager", "raven/identity").is_some());
     }
 
     #[test]
     fn test_unknown_module() {
-        let result = create_binding_from_module("raven/unknown");
+        let result = create_binding_from_module("Unknown", "raven/unknown");
+        assert!(result.is_none());
+    }
+    
+    #[test]
+    fn test_unknown_identity_binding() {
+        let result = create_binding_from_module("UnknownManager", "raven/identity");
         assert!(result.is_none());
     }
 }

@@ -5,5 +5,5 @@
 mod registry;
 mod value;
 
-pub use registry::{BindingMethod, BindingRegistry, WorkerBinding};
+pub use registry::{BindingMethod, BindingRegistry, NativeBinding};
 pub use value::BindingValue;

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::cell::RefCell;
 
-use super::bindings::{BindingRegistry, BindingValue, WorkerBinding};
+use super::bindings::{BindingRegistry, BindingValue, NativeBinding};
 use super::import::{parse_imports, create_binding_from_module};
 
 // 使用 thread_local 存储当前请求的绑定注册表
@@ -223,7 +223,7 @@ impl JsRuntime {
     }
 
     /// 手动注册一个绑定模块
-    pub fn register_binding(&mut self, binding: Box<dyn WorkerBinding>) {
+    pub fn register_binding(&mut self, binding: Box<dyn NativeBinding>) {
         let mut registry = self.bindings.write().unwrap();
         let name = binding.name().to_string();
         registry.register(&name, binding);
@@ -261,24 +261,16 @@ impl JsRuntime {
         self.imported_bindings.clear();
         
         for (imported_name, module_path) in &imports {
-            // 根据模块路径创建绑定实例
-            if let Some((binding_name, binding)) = create_binding_from_module(module_path) {
-                // 验证导入的名称是否与绑定名称匹配
-                if imported_name != &binding_name {
-                    return Err(format!(
-                        "Import name '{}' does not match expected binding '{}' for module '{}'",
-                        imported_name, binding_name, module_path
-                    ));
-                }
-                
-                // 注册绑定
-                if !self.imported_bindings.contains(&binding_name) {
+            // 根据导入名称和模块路径创建绑定实例
+            if let Some(binding) = create_binding_from_module(imported_name, module_path) {
+                // 注册绑定（使用导入的名称）
+                if !self.imported_bindings.contains(imported_name) {
                     let mut registry = self.bindings.write().unwrap();
-                    registry.register(&binding_name, binding);
+                    registry.register(imported_name, binding);
                     drop(registry);
                     
-                    self.imported_bindings.push(binding_name.clone());
-                    println!("  ✓ {} 模块已加载并注册", binding_name);
+                    self.imported_bindings.push(imported_name.clone());
+                    println!("  ✓ {} 模块已加载并注册", imported_name);
                 }
             } else {
                 return Err(format!("Unknown or unsupported module: '{}'", module_path));

@@ -21,7 +21,7 @@ mod kv;
 mod utils;
 
 // 重新导出核心绑定系统（为了向后兼容）
-pub use crate::runtime::bindings::{BindingRegistry, WorkerBinding, BindingMethod, BindingValue};
+pub use crate::runtime::bindings::{BindingRegistry, NativeBinding, BindingMethod, BindingValue};
 
 // 导出具体的绑定实现
 pub use kv::{KvBinding, KvStore, MemoryKvStore};

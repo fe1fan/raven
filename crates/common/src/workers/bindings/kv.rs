@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::runtime::bindings::{BindingMethod, BindingValue, WorkerBinding};
+use crate::runtime::bindings::{BindingMethod, BindingValue, NativeBinding};
 
 /// KV 存储后端 trait
 ///
@@ -192,7 +192,7 @@ impl KvBinding {
     }
 }
 
-impl WorkerBinding for KvBinding {
+impl NativeBinding for KvBinding {
     fn name(&self) -> &str {
         &self.name
     }

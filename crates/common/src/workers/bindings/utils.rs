@@ -30,7 +30,7 @@ use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashMap;
 use chrono::{Utc, TimeZone};
 
-use crate::runtime::bindings::{BindingMethod, BindingValue, WorkerBinding};
+use crate::runtime::bindings::{BindingMethod, BindingValue, NativeBinding};
 
 /// 工具函数绑定
 ///
@@ -263,7 +263,7 @@ impl UtilsBinding {
     }
 }
 
-impl WorkerBinding for UtilsBinding {
+impl NativeBinding for UtilsBinding {
     fn name(&self) -> &str {
         &self.name
     }
