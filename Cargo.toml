@@ -9,6 +9,8 @@ license = "MIT"
 repository = "https://github.com/fe1fan/raven"
 
 [workspace.dependencies]
+boa_engine = "0.21.0"
+boa_gc = "0.21.0"
 
 [profile.release]
 # Configurations explicitly listed here for clarity.
