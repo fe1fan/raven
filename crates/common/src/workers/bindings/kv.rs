@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use super::registry::{BindingMethod, BindingValue, WorkerBinding};
+use crate::runtime::bindings::{BindingMethod, BindingValue, WorkerBinding};
 
 /// KV 存储后端 trait
 ///

@@ -7,7 +7,7 @@ use std::fs;
 use std::net::{TcpListener, TcpStream};
 
 use super::http::{HttpRequest, HttpResponse};
-use super::runtime::JsRuntime;
+use super::fetch_runtime::FetchRuntime;
 
 /// Worker 服务器配置
 #[derive(Debug, Clone)]
@@ -47,13 +47,13 @@ impl ServerConfig {
 /// Worker HTTP 服务器
 pub struct WorkerServer {
     config: ServerConfig,
-    runtime: JsRuntime,
+    runtime: FetchRuntime,
 }
 
 impl WorkerServer {
     /// 创建新的 Worker 服务器
     pub fn new(config: ServerConfig) -> Result<Self, String> {
-        let mut runtime = JsRuntime::new();
+        let mut runtime = FetchRuntime::new();
 
         // 加载 Worker 脚本（会自动解析 import 并加载所需的绑定）
         let script = fs::read_to_string(&config.script_path)
@@ -66,7 +66,7 @@ impl WorkerServer {
 
     /// 从脚本内容创建服务器
     pub fn from_script(script: &str, host: &str, port: u16) -> Result<Self, String> {
-        let mut runtime = JsRuntime::new();
+        let mut runtime = FetchRuntime::new();
         
         // 加载脚本（会自动解析 import 并加载所需的绑定）
         runtime.load_worker(script)?;
@@ -81,8 +81,8 @@ impl WorkerServer {
         })
     }
 
-    /// 从现有的 JsRuntime 创建服务器
-    pub fn from_runtime(runtime: JsRuntime, config: ServerConfig) -> Self {
+    /// 从现有的 FetchRuntime 创建服务器
+    pub fn from_runtime(runtime: FetchRuntime, config: ServerConfig) -> Self {
         Self { config, runtime }
     }
 
@@ -208,5 +208,34 @@ mod tests {
         assert_eq!(response.status, 200);
         assert!(String::from_utf8_lossy(&response.body).contains("POST"));
         assert!(String::from_utf8_lossy(&response.body).contains("/api/data"));
+    }
+    
+    #[test]
+    fn test_with_bindings() {
+        let script = r#"
+            import { KV } from 'raven/kv'
+            
+            export default {
+                fetch(request, env, ctx) {
+                    KV.put("test", "value");
+                    var value = KV.get("test");
+                    return new Response(value, { status: 200 });
+                }
+            }
+        "#;
+
+        let mut server = WorkerServer::from_script(script, "127.0.0.1", 0).unwrap();
+
+        let request = HttpRequest {
+            method: "GET".to_string(),
+            path: "/test".to_string(),
+            version: "HTTP/1.1".to_string(),
+            headers: HashMap::new(),
+            body: Vec::new(),
+        };
+
+        let response = server.handle_request(&request).unwrap();
+        assert_eq!(response.status, 200);
+        assert_eq!(String::from_utf8_lossy(&response.body), "value");
     }
 }

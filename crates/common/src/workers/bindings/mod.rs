@@ -1,46 +1,28 @@
-//! Worker 绑定模块系统
+//! Workers 绑定实现
 //!
-//! 提供可扩展的模块架构，让 JS 代码可以调用 Rust 实现的功能。
+//! 提供具体的绑定实现（KV, UTILS 等）
 //!
-//! # 架构
+//! # 注意
 //!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────┐
-//! │                     JS Runtime                          │
-//! │  ┌─────────────────────────────────────────────────┐   │
-//! │  │ env.KV.get("key")                               │   │
-//! │  │ env.KV.put("key", "value")                      │   │
-//! │  │ env.DB.execute("SELECT * FROM users")          │   │
-//! │  └─────────────────────────────────────────────────┘   │
-//! └─────────────────────┬───────────────────────────────────┘
-//!                       │
-//!                       ▼
-//! ┌─────────────────────────────────────────────────────────┐
-//! │                 BindingRegistry                         │
-//! │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
-//! │  │    KV    │ │    D1    │ │    R2    │ │  Custom  │   │
-//! │  │ Binding  │ │ Binding  │ │ Binding  │ │ Binding  │   │
-//! │  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │
-//! └─────────────────────────────────────────────────────────┘
-//! ```
+//! 核心的绑定系统（BindingRegistry, WorkerBinding trait 等）
+//! 现在位于 `crate::runtime::bindings`，这里只包含具体实现。
 //!
 //! # Example
 //!
 //! ```ignore
-//! use common::workers::bindings::{BindingRegistry, KvBinding};
+//! use common::runtime::bindings::BindingRegistry;
+//! use common::workers::bindings::KvBinding;
 //!
 //! let mut registry = BindingRegistry::new();
-//! registry.register("KV", Box::new(KvBinding::memory()));
-//!
-//! // JS 中可以这样使用:
-//! // const value = await env.KV.get("my-key");
-//! // await env.KV.put("my-key", "my-value");
+//! registry.register("KV", Box::new(KvBinding::memory("KV")));
 //! ```
 
-mod registry;
 mod kv;
 mod utils;
 
-pub use registry::{BindingRegistry, WorkerBinding, BindingMethod, BindingValue};
+// 重新导出核心绑定系统（为了向后兼容）
+pub use crate::runtime::bindings::{BindingRegistry, WorkerBinding, BindingMethod, BindingValue};
+
+// 导出具体的绑定实现
 pub use kv::{KvBinding, KvStore, MemoryKvStore};
 pub use utils::UtilsBinding;

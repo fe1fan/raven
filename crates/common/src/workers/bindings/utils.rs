@@ -30,7 +30,7 @@ use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashMap;
 use chrono::{Utc, TimeZone};
 
-use super::registry::{BindingMethod, BindingValue, WorkerBinding};
+use crate::runtime::bindings::{BindingMethod, BindingValue, WorkerBinding};
 
 /// 工具函数绑定
 ///

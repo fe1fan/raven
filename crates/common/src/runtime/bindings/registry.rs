@@ -1,87 +1,7 @@
 //! 绑定注册表和核心 trait 定义
 
 use std::collections::HashMap;
-use std::fmt;
-
-/// 绑定方法的返回值类型
-#[derive(Debug, Clone)]
-pub enum BindingValue {
-    /// 空值
-    Null,
-    /// 布尔值
-    Bool(bool),
-    /// 整数
-    Int(i64),
-    /// 浮点数
-    Float(f64),
-    /// 字符串
-    String(String),
-    /// 字节数组
-    Bytes(Vec<u8>),
-    /// JSON 对象（序列化为字符串）
-    Json(String),
-    /// 数组
-    Array(Vec<BindingValue>),
-    /// 对象/Map
-    Object(HashMap<String, BindingValue>),
-    /// 错误
-    Error(String),
-}
-
-impl BindingValue {
-    pub fn is_error(&self) -> bool {
-        matches!(self, BindingValue::Error(_))
-    }
-
-    pub fn as_string(&self) -> Option<&str> {
-        match self {
-            BindingValue::String(s) => Some(s),
-            _ => None,
-        }
-    }
-
-    pub fn into_string(self) -> Option<String> {
-        match self {
-            BindingValue::String(s) => Some(s),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for BindingValue {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            BindingValue::Null => write!(f, "null"),
-            BindingValue::Bool(b) => write!(f, "{}", b),
-            BindingValue::Int(i) => write!(f, "{}", i),
-            BindingValue::Float(n) => write!(f, "{}", n),
-            BindingValue::String(s) => write!(f, "{}", s),
-            BindingValue::Bytes(b) => write!(f, "<bytes: {} bytes>", b.len()),
-            BindingValue::Json(j) => write!(f, "{}", j),
-            BindingValue::Array(arr) => {
-                write!(f, "[")?;
-                for (i, v) in arr.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}", v)?;
-                }
-                write!(f, "]")
-            }
-            BindingValue::Object(obj) => {
-                write!(f, "{{")?;
-                for (i, (k, v)) in obj.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}: {}", k, v)?;
-                }
-                write!(f, "}}")
-            }
-            BindingValue::Error(e) => write!(f, "Error: {}", e),
-        }
-    }
-}
+use super::value::BindingValue;
 
 /// 绑定方法定义
 #[derive(Debug, Clone)]
@@ -116,7 +36,7 @@ impl BindingMethod {
 ///
 /// 所有可绑定到 JS 环境的模块都需要实现此 trait
 pub trait WorkerBinding: Send + Sync {
-    /// 绑定名称（在 JS 中通过 env.{name} 访问）
+    /// 绑定名称（在 JS 中通过全局名称访问，如 KV, UTILS）
     fn name(&self) -> &str;
 
     /// 获取此绑定支持的所有方法
@@ -140,7 +60,7 @@ pub trait WorkerBinding: Send + Sync {
 
 /// 绑定注册表
 ///
-/// 管理所有注册的 Worker 绑定
+/// 管理所有注册的绑定
 pub struct BindingRegistry {
     bindings: HashMap<String, Box<dyn WorkerBinding>>,
 }
@@ -162,7 +82,7 @@ impl BindingRegistry {
     /// 注册一个绑定
     ///
     /// # Arguments
-    /// * `name` - 绑定名称（env.{name}）
+    /// * `name` - 绑定名称（全局访问名，如 KV, UTILS）
     /// * `binding` - 绑定实现
     pub fn register(&mut self, name: &str, binding: Box<dyn WorkerBinding>) {
         self.bindings.insert(name.to_string(), binding);
