@@ -146,11 +146,11 @@ impl Class for JsResponseClass {
 /// Workers Fetch 运行时
 ///
 /// 基于核心 JsRuntime，添加 fetch() 入口支持
-pub struct FetchRuntime {
+pub struct WorkersRuntime {
     runtime: JsRuntime,
 }
 
-impl FetchRuntime {
+impl WorkersRuntime {
     /// 创建新的 Fetch 运行时
     pub fn new() -> Self {
         let mut runtime = JsRuntime::new();
@@ -401,7 +401,7 @@ impl FetchRuntime {
     }
 }
 
-impl Default for FetchRuntime {
+impl Default for WorkersRuntime {
     fn default() -> Self {
         Self::new()
     }

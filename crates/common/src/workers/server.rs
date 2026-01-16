@@ -7,7 +7,7 @@ use std::fs;
 use std::net::{TcpListener, TcpStream};
 
 use super::http::{HttpRequest, HttpResponse};
-use super::fetch_runtime::FetchRuntime;
+use super::workers_runtime::WorkersRuntime;
 
 /// Worker 服务器配置
 #[derive(Debug, Clone)]
@@ -47,13 +47,13 @@ impl ServerConfig {
 /// Worker HTTP 服务器
 pub struct WorkerServer {
     config: ServerConfig,
-    runtime: FetchRuntime,
+    runtime: WorkersRuntime,
 }
 
 impl WorkerServer {
     /// 创建新的 Worker 服务器
     pub fn new(config: ServerConfig) -> Result<Self, String> {
-        let mut runtime = FetchRuntime::new();
+        let mut runtime = WorkersRuntime::new();
 
         // 加载 Worker 脚本（会自动解析 import 并加载所需的绑定）
         let script = fs::read_to_string(&config.script_path)
@@ -66,7 +66,7 @@ impl WorkerServer {
 
     /// 从脚本内容创建服务器
     pub fn from_script(script: &str, host: &str, port: u16) -> Result<Self, String> {
-        let mut runtime = FetchRuntime::new();
+        let mut runtime = WorkersRuntime::new();
         
         // 加载脚本（会自动解析 import 并加载所需的绑定）
         runtime.load_worker(script)?;
@@ -82,7 +82,7 @@ impl WorkerServer {
     }
 
     /// 从现有的 FetchRuntime 创建服务器
-    pub fn from_runtime(runtime: FetchRuntime, config: ServerConfig) -> Self {
+    pub fn from_runtime(runtime: WorkersRuntime, config: ServerConfig) -> Self {
         Self { config, runtime }
     }
 

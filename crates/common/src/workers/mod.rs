@@ -5,9 +5,9 @@
 
 pub mod bindings;
 mod http;
-mod fetch_runtime;
+mod workers_runtime;
 mod server;
 
 pub use http::{HttpRequest, HttpResponse};
-pub use fetch_runtime::FetchRuntime;
+pub use workers_runtime::WorkersRuntime;
 pub use server::{serve, serve_script, ServerConfig, WorkerServer};
