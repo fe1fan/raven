@@ -3,13 +3,17 @@ use leptos_router::*;
 
 #[component]
 pub fn Layout(children: Children) -> impl IntoView {
+    let (is_collapsed, set_is_collapsed) = create_signal(false);
+
     view! {
-        <div class="min-h-screen flex bg-apple-gray-100 dark:bg-black transition-colors duration-300">
-            <Sidebar/>
-            <div class="flex-1 flex flex-col min-w-0">
-                <Header/>
-                <main class="flex-1 overflow-y-auto p-6">
-                    {children()}
+        <div class="min-h-screen flex bg-apple-gray-100 dark:bg-[#000000] transition-colors duration-300">
+            <Sidebar is_collapsed=is_collapsed set_is_collapsed=set_is_collapsed/>
+            <div class="flex-1 flex flex-col min-w-0 transition-all duration-300">
+                <Header is_collapsed=is_collapsed set_is_collapsed=set_is_collapsed/>
+                <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                    <div class="max-w-7xl mx-auto">
+                        {children()}
+                    </div>
                 </main>
             </div>
         </div>
@@ -17,55 +21,169 @@ pub fn Layout(children: Children) -> impl IntoView {
 }
 
 #[component]
-fn Sidebar() -> impl IntoView {
+pub fn PageHeader(
+    title: &'static str,
+    subtitle: &'static str,
+    #[prop(optional)] action: Option<View>,
+) -> impl IntoView {
+    view! {
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-apple-label dark:text-apple-darkLabel mb-2">{title}</h1>
+                <p class="text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel">{subtitle}</p>
+            </div>
+            {action}
+        </div>
+    }
+}
+
+#[component]
+pub fn GlassCard(
+    #[prop(optional, default = "")] class: &'static str,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <div class=format!("glass-card p-6 rounded-apple-3xl {}", class)>
+            {children()}
+        </div>
+    }
+}
+
+#[component]
+pub fn Badge(
+    #[prop(into)] text: String,
+    #[prop(optional, default = "primary")] variant: &'static str,
+) -> impl IntoView {
+    let base_class = "px-2.5 py-1 text-xs font-bold rounded-full border";
+    let variant_class = match variant {
+        "success" => "bg-apple-green/10 text-apple-green dark:text-apple-darkGreen border-apple-green/20",
+        "danger" => "bg-apple-red/10 text-apple-red dark:text-apple-darkRed border-apple-red/20",
+        "warning" => "bg-apple-yellow/10 text-apple-yellow dark:text-apple-darkYellow border-apple-yellow/20",
+        "indigo" => "bg-apple-indigo/10 text-apple-indigo dark:text-apple-darkIndigo border-apple-indigo/20",
+        _ => "bg-apple-blue/10 text-apple-blue dark:text-apple-darkBlue border-apple-blue/20",
+    };
+
+    view! {
+        <span class=format!("{} {}", base_class, variant_class)>
+            {text}
+        </span>
+    }
+}
+
+#[component]
+pub fn DashboardCard(
+    value: &'static str,
+    title: &'static str,
+    badge: &'static str,
+    badge_type: &'static str,
+    icon_bg: &'static str,
+    icon_svg: &'static str,
+) -> impl IntoView {
+    view! {
+        <div class="glass-card p-6 rounded-apple-3xl group transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-white/5">
+            <div class="flex items-center justify-between mb-4">
+                <div class=format!("w-12 h-12 {} rounded-apple-xl flex items-center justify-center text-white shadow-lg", icon_bg)>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=icon_svg/>
+                    </svg>
+                </div>
+                <Badge text=badge.to_string() variant=badge_type/>
+            </div>
+            <p class="text-3xl font-bold tracking-tight text-apple-label dark:text-apple-darkLabel">{value}</p>
+            <p class="text-sm text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel font-medium mt-1">{title}</p>
+        </div>
+    }
+}
+
+#[component]
+pub fn ServerStatCard(value: &'static str, label: &'static str, color: &'static str) -> impl IntoView {
+    let (text_color, bg_color) = match color {
+        "success" => ("text-apple-green", "bg-apple-green/10"),
+        "warning" => ("text-apple-yellow", "bg-apple-yellow/10"),
+        "danger" => ("text-apple-red", "bg-apple-red/10"),
+        _ => ("text-apple-blue", "bg-apple-blue/10"),
+    };
+
+    view! {
+        <div class="glass-card p-4 rounded-apple-2xl flex items-center justify-between">
+            <div>
+                <p class="text-2xl font-bold text-apple-label dark:text-apple-darkLabel">{value}</p>
+                <p class="text-xs font-medium text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel mt-0.5">{label}</p>
+            </div>
+            <div class=format!("w-10 h-10 rounded-apple-xl flex items-center justify-center {}", bg_color)>
+                <div class=format!("w-3 h-3 rounded-full {}", text_color.replace("text-", "bg-"))></div>
+            </div>
+        </div>
+    }
+}
+
+#[component]
+fn Sidebar(
+    is_collapsed: ReadSignal<bool>,
+    set_is_collapsed: WriteSignal<bool>,
+) -> impl IntoView {
     let location = use_location();
 
     view! {
-        <aside class="w-64 flex-shrink-0 glass-card border-r border-apple-gray-200/50 dark:border-white/10 z-50 h-screen sticky top-0">
-            <div class="h-16 flex items-center px-6 border-b border-apple-gray-200/50 dark:border-white/10">
-                <div class="flex items-center gap-3">
-                    <img src="/assets/logo.png" class="w-8 h-8 rounded-lg shadow-sm" alt="Raven Logo" 
-                         // Fallback in case image doesn't exist
+        <aside class=move || format!(
+            "flex-shrink-0 glass-card border-r border-apple-gray-200/50 dark:border-white/10 z-50 h-screen sticky top-0 transition-all duration-300 {}",
+            if is_collapsed.get() { "w-20" } else { "w-64" }
+        )>
+            <div class="h-16 flex items-center justify-between px-6 border-b border-apple-gray-200/50 dark:border-white/10">
+                <div class=move || format!("flex items-center gap-3 transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 invisible w-0" } else { "opacity-100 visible w-auto" })>
+                    <img src="/assets/logo.png" class="w-8 h-8 rounded-lg shadow-sm" alt="Raven Logo"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-apple-gray-800 to-black hidden items-center justify-center text-white font-bold text-lg">
                         "R"
                     </div>
                     <span class="text-lg font-bold tracking-tight text-apple-label dark:text-apple-darkLabel">"Raven"</span>
                 </div>
+
+                <button
+                    on:click=move |_| set_is_collapsed.update(|v| *v = !*v)
+                    class=move || format!(
+                        "p-2 text-apple-secondaryLabel hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all {}",
+                        if is_collapsed.get() { "mx-auto" } else { "" }
+                    )
+                >
+                    <svg class=move || format!("w-5 h-5 transition-transform duration-300 {}", if is_collapsed.get() { "rotate-180" } else { "" }) fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                    </svg>
+                </button>
             </div>
 
             <nav class="p-4 space-y-6 overflow-y-auto h-[calc(100vh-64px)]">
-                <NavSection title="概览">
-                    <NavItem href="/" icon=Icon::Dashboard label="仪表盘" is_active=move || location.pathname.get() == "/"/>
-                    <NavItem href="/servers" icon=Icon::Server label="服务器管理" is_active=move || location.pathname.get() == "/servers"/>
+                <NavSection title="概览" is_collapsed=is_collapsed>
+                    <NavItem href="/" icon=Icon::Dashboard label="仪表盘" is_active=move || location.pathname.get() == "/" is_collapsed=is_collapsed/>
+                    <NavItem href="/servers" icon=Icon::Server label="服务器管理" is_active=move || location.pathname.get() == "/servers" is_collapsed=is_collapsed/>
                 </NavSection>
 
-                <NavSection title="监控与告警">
-                    <NavItem href="/monitoring" icon=Icon::Monitor label="监控中心" is_active=move || location.pathname.get() == "/monitoring"/>
-                    <NavItem href="/alerts" icon=Icon::Alert label="告警中心" is_active=move || location.pathname.get() == "/alerts"/>
+                <NavSection title="监控与告警" is_collapsed=is_collapsed>
+                    <NavItem href="/monitoring" icon=Icon::Monitor label="监控中心" is_active=move || location.pathname.get() == "/monitoring" is_collapsed=is_collapsed/>
+                    <NavItem href="/alerts" icon=Icon::Alert label="告警中心" is_active=move || location.pathname.get() == "/alerts" is_collapsed=is_collapsed/>
                 </NavSection>
 
-                <NavSection title="运维工具">
-                    <NavItem href="/terminal" icon=Icon::Terminal label="Web终端" is_active=move || location.pathname.get() == "/terminal"/>
-                    <NavItem href="/commands" icon=Icon::Command label="命令执行" is_active=move || location.pathname.get() == "/commands"/>
-                    <NavItem href="/cronjobs" icon=Icon::Cronjob label="定时任务" is_active=move || location.pathname.get() == "/cronjobs"/>
+                <NavSection title="运维工具" is_collapsed=is_collapsed>
+                    <NavItem href="/terminal" icon=Icon::Terminal label="Web终端" is_active=move || location.pathname.get() == "/terminal" is_collapsed=is_collapsed/>
+                    <NavItem href="/commands" icon=Icon::Command label="命令执行" is_active=move || location.pathname.get() == "/commands" is_collapsed=is_collapsed/>
+                    <NavItem href="/cronjobs" icon=Icon::Cronjob label="定时任务" is_active=move || location.pathname.get() == "/cronjobs" is_collapsed=is_collapsed/>
                 </NavSection>
 
-                <NavSection title="服务管理">
-                    <NavItem href="/docker" icon=Icon::Docker label="容器管理" is_active=move || location.pathname.get() == "/docker"/>
-                    <NavItem href="/database" icon=Icon::Database label="数据库" is_active=move || location.pathname.get() == "/database"/>
-                    <NavItem href="/files" icon=Icon::Files label="文件管理" is_active=move || location.pathname.get() == "/files"/>
+                <NavSection title="服务管理" is_collapsed=is_collapsed>
+                    <NavItem href="/docker" icon=Icon::Docker label="容器管理" is_active=move || location.pathname.get() == "/docker" is_collapsed=is_collapsed/>
+                    <NavItem href="/database" icon=Icon::Database label="数据库" is_active=move || location.pathname.get() == "/database" is_collapsed=is_collapsed/>
+                    <NavItem href="/files" icon=Icon::Files label="文件管理" is_active=move || location.pathname.get() == "/files" is_collapsed=is_collapsed/>
                 </NavSection>
 
-                <NavSection title="安全与审计">
-                    <NavItem href="/firewall" icon=Icon::Firewall label="防火墙" is_active=move || location.pathname.get() == "/firewall"/>
-                    <NavItem href="/audit" icon=Icon::Audit label="操作审计" is_active=move || location.pathname.get() == "/audit"/>
-                    <NavItem href="/users" icon=Icon::Users label="用户权限" is_active=move || location.pathname.get() == "/users"/>
+                <NavSection title="安全与审计" is_collapsed=is_collapsed>
+                    <NavItem href="/firewall" icon=Icon::Firewall label="防火墙" is_active=move || location.pathname.get() == "/firewall" is_collapsed=is_collapsed/>
+                    <NavItem href="/audit" icon=Icon::Audit label="操作审计" is_active=move || location.pathname.get() == "/audit" is_collapsed=is_collapsed/>
+                    <NavItem href="/users" icon=Icon::Users label="用户权限" is_active=move || location.pathname.get() == "/users" is_collapsed=is_collapsed/>
                 </NavSection>
 
-                <NavSection title="系统">
-                    <NavItem href="/settings" icon=Icon::Settings label="系统设置" is_active=move || location.pathname.get() == "/settings"/>
-                    <NavItem href="/example" icon=Icon::Example label="交互示例" is_active=move || location.pathname.get() == "/example"/>
+                <NavSection title="系统" is_collapsed=is_collapsed>
+                    <NavItem href="/settings" icon=Icon::Settings label="系统设置" is_active=move || location.pathname.get() == "/settings" is_collapsed=is_collapsed/>
+                    <NavItem href="/example" icon=Icon::Example label="交互示例" is_active=move || location.pathname.get() == "/example" is_collapsed=is_collapsed/>
                 </NavSection>
             </nav>
         </aside>
@@ -73,10 +191,14 @@ fn Sidebar() -> impl IntoView {
 }
 
 #[component]
-fn NavSection(title: &'static str, children: Children) -> impl IntoView {
+fn NavSection(
+    title: &'static str,
+    is_collapsed: ReadSignal<bool>,
+    children: Children,
+) -> impl IntoView {
     view! {
         <div>
-            <div class="px-3 mb-2">
+            <div class=move || format!("px-3 mb-2 transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 h-0 overflow-hidden" } else { "opacity-100 h-auto" })>
                 <span class="text-xs font-semibold text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel uppercase tracking-wider">
                     {title}
                 </span>
@@ -94,6 +216,7 @@ fn NavItem<F>(
     icon: Icon,
     label: &'static str,
     is_active: F,
+    is_collapsed: ReadSignal<bool>,
 ) -> impl IntoView
 where
     F: Fn() -> bool + Clone + 'static,
@@ -118,17 +241,22 @@ where
             }>
                 {icon.svg()}
             </div>
-            <span class="text-sm">{label}</span>
+            <span class=move || format!("text-sm transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 invisible w-0 overflow-hidden" } else { "opacity-100 visible w-auto" })>
+                {label}
+            </span>
         </A>
     }
 }
 
 #[component]
-fn Header() -> impl IntoView {
+fn Header(
+    #[prop(optional)] _is_collapsed: Option<ReadSignal<bool>>,
+    #[prop(optional)] _set_is_collapsed: Option<WriteSignal<bool>>,
+) -> impl IntoView {
 
     view! {
-        <header class="sticky top-0 z-40 glass-card border-b border-apple-gray-200/50 dark:border-white/10">
-            <div class="flex items-center justify-between px-6 py-3">
+        <header class="sticky top-0 z-40 glass-card border-b border-apple-gray-200/50 dark:border-white/10 h-16 transition-all duration-300">
+            <div class="flex items-center justify-between px-6 h-full">
                 // 搜索框
                 <div class="flex-1 max-w-md">
                     <div class="relative group">
