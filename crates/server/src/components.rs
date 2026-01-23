@@ -125,18 +125,6 @@ where
 
 #[component]
 fn Header() -> impl IntoView {
-    // Theme toggle logic
-    let toggle_theme = move |_| {
-        let doc = document().document_element().unwrap();
-        let class_list = doc.class_list();
-        if class_list.contains("dark") {
-            let _ = class_list.remove_1("dark");
-            let _ = class_list.add_1("light");
-        } else {
-            let _ = class_list.remove_1("light");
-            let _ = class_list.add_1("dark");
-        }
-    };
 
     view! {
         <header class="sticky top-0 z-40 glass-card border-b border-apple-gray-200/50 dark:border-white/10">
@@ -160,8 +148,8 @@ fn Header() -> impl IntoView {
                 // 右侧操作
                 <div class="flex items-center gap-4">
                     // 主题切换
-                    <button 
-                        on:click=toggle_theme
+                    <button
+                        onclick="toggleTheme()"
                         class="p-2 text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
                         title="切换主题"
                     >

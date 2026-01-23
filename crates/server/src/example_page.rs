@@ -209,20 +209,19 @@ fn HttpApiExample() -> impl IntoView {
     let (api_response, set_api_response) = create_signal(String::new());
     let (loading, set_loading) = create_signal(false);
 
+    // 使用 Server Function 来模拟 HTTP API 调用
     let call_api = create_action(move |_: &()| async move {
         set_loading.set(true);
-        // 模拟 API 调用延迟
-        tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
-        
-        let mock_response = r#"{
-  "status": "success",
-  "data": {
-    "version": "1.0.0",
-    "uptime": 3600,
-    "region": "ap-east-1"
-  }
-}"#;
-        set_api_response.set(mock_response.to_string());
+
+        // 使用 server function 来获取数据（这个会在服务器端执行）
+        match test_http_api_sf().await {
+            Ok(response) => {
+                set_api_response.set(response);
+            }
+            Err(e) => {
+                set_api_response.set(format!("Error: {}", e));
+            }
+        }
         set_loading.set(false);
     });
 
@@ -328,18 +327,60 @@ fetch('/api/servers/stats')
 #[component]
 fn WebSocketExample() -> impl IntoView {
     let (connected, set_connected) = create_signal(false);
-    let (message_count, set_message_count) = create_signal(0);
+    let (_message_count, set_message_count) = create_signal(0);
+    let (messages, set_messages) = create_signal(Vec::<String>::new());
 
-    let simulate_ws = create_action(move |_: &()| async move {
+    // 使用 set_interval 模拟 WebSocket 消息
+    let simulate_ws = move |_| {
+        if connected.get() {
+            return; // 已经连接中，不要重复连接
+        }
+
         set_connected.set(true);
         set_message_count.set(0);
+        set_messages.set(vec!["WebSocket 连接已建立...".to_string()]);
 
-        for i in 1..=10 {
-            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-            set_message_count.set(i);
+        // 使用 leptos 的 set_interval 来模拟消息接收
+        #[cfg(target_arch = "wasm32")]
+        {
+            use gloo_timers::callback::Interval;
+            use std::cell::RefCell;
+            use std::rc::Rc;
+
+            let count = Rc::new(RefCell::new(0));
+            let count_clone = count.clone();
+
+            let interval = Interval::new(500, move || {
+                let mut c = count_clone.borrow_mut();
+                *c += 1;
+                set_message_count.set(*c);
+
+                let msg = format!("收到消息 #{}: 服务器状态正常", *c);
+                set_messages.update(|msgs| msgs.push(msg));
+
+                if *c >= 10 {
+                    set_connected.set(false);
+                    set_messages.update(|msgs| msgs.push("连接已关闭".to_string()));
+                }
+            });
+
+            // 存储 interval 防止被 drop
+            let interval = Rc::new(RefCell::new(Some(interval)));
+            let interval_clone = interval.clone();
+
+            // 当计数达到10时清除 interval
+            create_effect(move |_| {
+                if message_count.get() >= 10 {
+                    interval_clone.borrow_mut().take();
+                }
+            });
         }
-        set_connected.set(false);
-    });
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            // 服务器端渲染时不执行
+        }
+    };
 
     view! {
         <div class="glass-card rounded-apple-3xl overflow-hidden group transition-all duration-300 hover:scale-[1.01]">
@@ -379,7 +420,7 @@ fn WebSocketExample() -> impl IntoView {
             <div class="p-8">
                 <div class="mb-6">
                     <button
-                        on:click=move |_| simulate_ws.dispatch(())
+                        on:click=simulate_ws
                         disabled=move || connected.get()
                         class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-apple-indigo to-purple-600 text-white rounded-apple-2xl font-semibold shadow-lg shadow-apple-indigo/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -397,34 +438,41 @@ fn WebSocketExample() -> impl IntoView {
                         <div class="w-3 h-3 bg-apple-green rounded-full"></div>
                         <span class="ml-4 text-gray-400 text-sm font-mono">"WebSocket Terminal"</span>
                     </div>
-                    <div class="font-mono text-sm space-y-2">
-                        {move || if connected.get() {
-                            view! {
-                                <div class="space-y-2">
-                                    <div class="text-apple-green">> "WebSocket 连接已建立..."</div>
-                                    <div class="text-apple-blue">> "开始接收实时数据..."</div>
-                                    <div class="text-gray-300">
-                                        > "已接收 "
-                                        <span class="text-apple-yellow font-bold">{message_count}</span>
-                                        " 条消息"
+                    <div class="font-mono text-sm space-y-2 max-h-[200px] overflow-y-auto">
+                        {move || {
+                            let msgs = messages.get();
+                            if msgs.is_empty() {
+                                view! {
+                                    <div class="text-gray-500">> "等待连接..."</div>
+                                }.into_view()
+                            } else {
+                                view! {
+                                    <div class="space-y-1">
+                                        {msgs.iter().map(|msg| {
+                                            let color = if msg.contains("已建立") || msg.contains("正常") {
+                                                "text-apple-green"
+                                            } else if msg.contains("关闭") {
+                                                "text-apple-yellow"
+                                            } else {
+                                                "text-gray-300"
+                                            };
+                                            view! {
+                                                <div class=color>> {msg.clone()}</div>
+                                            }
+                                        }).collect::<Vec<_>>()}
+                                        {move || if connected.get() {
+                                            view! {
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-apple-green">">"</span>
+                                                    <div class="w-2 h-4 bg-apple-green animate-pulse"></div>
+                                                </div>
+                                            }.into_view()
+                                        } else {
+                                            view! { <div></div> }.into_view()
+                                        }}
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-apple-green">">"</span>
-                                        <div class="w-2 h-4 bg-apple-green animate-pulse"></div>
-                                    </div>
-                                </div>
-                            }.into_view()
-                        } else if message_count.get() > 0 {
-                            view! {
-                                <div class="space-y-2">
-                                    <div class="text-apple-yellow">> "连接已关闭"</div>
-                                    <div class="text-gray-400">> "总共接收了 " {message_count} " 条消息"</div>
-                                </div>
-                            }.into_view()
-                        } else {
-                            view! {
-                                <div class="text-gray-500">> "等待连接..."</div>
-                            }.into_view()
+                                }.into_view()
+                            }
                         }}
                     </div>
                 </div>
@@ -445,9 +493,8 @@ fn WebSocketExample() -> impl IntoView {
                                     <li>"协作编辑"</li>
                                 </ul>
                                 <p class="mt-3 text-xs text-apple-gray-500">
-                                    "💡 提示：打开浏览器访问 "
-                                    <code class="px-2 py-1 bg-apple-gray-200/50 dark:bg-white/10 rounded">"test_websocket.html"</code>
-                                    " 查看完整的 WebSocket 示例"
+                                    "提示：WebSocket 端点位于 "
+                                    <code class="px-2 py-1 bg-apple-gray-200/50 dark:bg-white/10 rounded">"ws://localhost:3000/ws/monitoring"</code>
                                 </p>
                             </div>
                         </div>

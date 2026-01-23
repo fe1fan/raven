@@ -79,7 +79,35 @@ pub fn App() -> impl IntoView {
             {tailwind_config}
         </Script>
 
-        // 4. Global Styles for Glassmorphism
+        // 4. Theme initialization script (runs before render to prevent flash)
+        <Script>
+            r#"
+            (function() {
+                var theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                } else {
+                    document.documentElement.classList.add('light');
+                    document.documentElement.classList.remove('dark');
+                }
+                window.toggleTheme = function() {
+                    var html = document.documentElement;
+                    if (html.classList.contains('dark')) {
+                        html.classList.remove('dark');
+                        html.classList.add('light');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        html.classList.remove('light');
+                        html.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                };
+            })();
+            "#
+        </Script>
+
+        // 5. Global Styles for Glassmorphism
         <Style>
             ".glass-card {
                 backdrop-filter: saturate(180%) blur(20px);
