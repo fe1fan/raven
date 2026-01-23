@@ -2,15 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple-style custom styles */
 @layer base {
   body {
-    @apply antialiased;
+    @apply antialiased text-apple-label bg-apple-gray-100 dark:bg-black dark:text-apple-darkLabel transition-colors duration-300;
   }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r bg-clip-text text-transparent;
+  }
+}
+
+@layer components {
+  /* 核心材质：saturate(180%) 是 Apple 质感的精髓 */
+  .glass-card {
+    @apply backdrop-blur-[20px] backdrop-saturate-[180%];
+  }
+
+  /* 亮色模式材质 */
+  html:not(.dark) .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  /* 暗色模式材质 */
+  html.dark .glass-card {
+    background: rgba(28, 28, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
