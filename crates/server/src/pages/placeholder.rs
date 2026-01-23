@@ -498,26 +498,24 @@ pub fn AuditPage() -> impl IntoView {
                 subtitle="追踪系统关键操作与配置变更"
             />
             <GlassCard class="!p-0 overflow-hidden">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-apple-gray-100/50 dark:bg-white/5 border-b border-apple-gray-200/50 dark:border-white/10 text-xs uppercase text-apple-secondaryLabel font-semibold">
-                        <tr>
-                            <th class="px-6 py-4">"时间"</th>
-                            <th class="px-6 py-4">"用户"</th>
-                            <th class="px-6 py-4">"操作"</th>
-                            <th class="px-6 py-4">"目标"</th>
-                            <th class="px-6 py-4 text-right">"结果"</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-apple-gray-200/50 dark:divide-white/5 text-apple-secondaryLabel">
-                        <tr>
-                            <td class="px-6 py-4 text-xs">"2026-01-23 10:45"</td>
-                            <td class="px-6 py-4 font-bold text-apple-label dark:text-apple-darkLabel">"Admin"</td>
-                            <td class="px-6 py-4">"重启服务"</td>
-                            <td class="px-6 py-4">"web-prod-01"</td>
-                            <td class="px-6 py-4 text-right"><Badge text="成功" variant="success" /></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <Table>
+                    <TableHeader>
+                        <TableHead>"时间"</TableHead>
+                        <TableHead>"用户"</TableHead>
+                        <TableHead>"操作"</TableHead>
+                        <TableHead>"目标"</TableHead>
+                        <TableHead><div class="text-right">"结果"</div></TableHead>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell class="text-xs">"2026-01-23 10:45"</TableCell>
+                            <TableCell class="font-bold">"Admin"</TableCell>
+                            <TableCell>"重启服务"</TableCell>
+                            <TableCell>"web-prod-01"</TableCell>
+                            <TableCell class="text-right"><Badge text="成功" variant="success" /></TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </GlassCard>
         </Layout>
     }
