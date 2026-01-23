@@ -9,9 +9,9 @@ pub fn HomePage() -> impl IntoView {
                 title="仪表盘"
                 subtitle="概览您的系统运行状态"
                 action=view! {
-                    <button class="bg-apple-blue hover:bg-apple-blue/90 text-white px-5 py-2.5 rounded-apple-xl text-sm font-semibold shadow-lg shadow-apple-blue/30 transition-all hover:scale-105 active:scale-95">
+                    <ButtonSimple>
                         "系统自检"
-                    </button>
+                    </ButtonSimple>
                 }.into_view()
             />
 
@@ -182,9 +182,7 @@ fn ActivityItem(
 ) -> impl IntoView {
     view! {
         <div class="flex items-start gap-3 p-3 rounded-apple-2xl hover:bg-apple-gray-200/50 dark:hover:bg-white/5 transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-apple-blue/10 flex items-center justify-center flex-shrink-0 text-apple-blue font-bold text-xs group-hover:scale-110 transition-transform">
-                {move || user.chars().next().unwrap().to_string()}
-            </div>
+            <Avatar name=user.to_string() size="small" class="flex-shrink-0 group-hover:scale-110 transition-transform" />
             <div class="flex-1 min-w-0">
                 <p class="text-sm text-apple-label dark:text-apple-darkLabel">
                     <span class="font-medium">{user}</span>
@@ -193,7 +191,9 @@ fn ActivityItem(
                     " "
                     <span class="font-medium text-apple-blue">{target}</span>
                 </p>
-                <p class="text-xs text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel mt-0.5">{time}</p>
+                <p class="text-xs text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel mt-0.5">
+                    <DisplayText value=time.to_string() />
+                </p>
             </div>
         </div>
     }

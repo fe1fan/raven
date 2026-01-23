@@ -107,7 +107,9 @@ fn MetricCard(title: &'static str, value: &'static str, trend: &'static str, col
         <div class="glass-card p-5 rounded-apple-2xl">
             <p class="text-sm font-medium text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel mb-1">{title}</p>
             <div class="flex items-end justify-between">
-                <h4 class=format!("text-2xl font-bold text-{}", color)>{value}</h4>
+                <h4 class=format!("text-2xl font-bold text-{}", color)>
+                    <DisplayText value=value.to_string() class="text-2xl font-bold" />
+                </h4>
                 <div class="flex items-center gap-1 text-xs font-bold text-apple-green">
                     {match trend {
                         "up" => "↑ 12%",
@@ -139,11 +141,14 @@ pub fn AlertsPage() -> impl IntoView {
                     />
                 </div>
                 <div class="w-40">
-                    <Select>
-                        <option>"所有级别"</option>
-                        <option>"严重"</option>
-                        <option>"警告"</option>
-                    </Select>
+                    <Select
+                        placeholder="所有级别"
+                        options=vec![
+                            ("all".to_string(), "所有级别".to_string()),
+                            ("critical".to_string(), "严重".to_string()),
+                            ("warning".to_string(), "警告".to_string()),
+                        ]
+                    />
                 </div>
             </div>
 
@@ -197,11 +202,13 @@ pub fn TerminalPage() -> impl IntoView {
 
             <div class="flex gap-4 mb-6">
                 <div class="flex-1">
-                    <Select>
-                        <option>"选择服务器..."</option>
-                        <option>"web-prod-01 (192.168.1.101)"</option>
-                        <option>"db-master-01 (192.168.1.201)"</option>
-                    </Select>
+                    <Select
+                        placeholder="选择服务器..."
+                        options=vec![
+                            ("web-prod-01".to_string(), "web-prod-01 (192.168.1.101)".to_string()),
+                            ("db-master-01".to_string(), "db-master-01 (192.168.1.201)".to_string()),
+                        ]
+                    />
                 </div>
                 <ButtonSimple>"连接"</ButtonSimple>
             </div>
@@ -256,7 +263,7 @@ pub fn CommandsPage() -> impl IntoView {
 
                 <GlassCard class="lg:col-span-2">
                     <h3 class="text-lg font-bold mb-4 text-apple-label dark:text-apple-darkLabel">"脚本编辑"</h3>
-                    <Textarea class="h-48 font-mono" placeholder="#!/bin/bash\n\napt-get update\napt-get upgrade -y" />
+                    <CodeEditor class="h-64" placeholder="#!/bin/bash\n\napt-get update\napt-get upgrade -y" />
                     <div class="mt-4 flex justify-end gap-3">
                         <ButtonSimple variant="secondary">"保存模版"</ButtonSimple>
                         <ButtonSimple>"立即执行"</ButtonSimple>
@@ -306,8 +313,8 @@ fn CronjobRow(name: &'static str, schedule: &'static str, last_run: &'static str
     view! {
         <TableRow>
             <TableCell class="font-medium">{name}</TableCell>
-            <TableCell class="font-mono text-xs">{schedule}</TableCell>
-            <TableCell class="text-apple-secondaryLabel">{last_run}</TableCell>
+            <TableCell><DisplayText value=schedule.to_string() /></TableCell>
+            <TableCell class="text-apple-secondaryLabel"><DisplayText value=last_run.to_string() /></TableCell>
             <TableCell>
                 <Badge text=status.to_uppercase() variant=status />
             </TableCell>
@@ -327,10 +334,11 @@ pub fn DockerPage() -> impl IntoView {
                 subtitle="监控容器运行状态与镜像分发"
             />
 
-            <div class="flex gap-1 p-1 bg-apple-gray-200/50 dark:bg-white/10 w-fit rounded-apple-2xl mb-8">
-                <button class="px-6 py-2 bg-white dark:bg-white/10 shadow-sm rounded-apple-xl text-sm font-bold">"容器 (12)"</button>
-                <button class="px-6 py-2 text-apple-secondaryLabel text-sm font-medium">"镜像 (45)"</button>
-                <button class="px-6 py-2 text-apple-secondaryLabel text-sm font-medium">"网络 & 卷"</button>
+            <div class="mb-8">
+                <SegmentedControl
+                    options=vec!["容器 (12)", "镜像 (45)", "网络 & 卷"]
+                    active_index=0
+                />
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -412,11 +420,11 @@ fn DatabaseCard(type_: &'static str, version: &'static str, status: &'static str
             <div class="grid grid-cols-2 gap-4 mt-6">
                 <div class="p-3 bg-apple-gray-200/50 dark:bg-white/10 rounded-apple-xl">
                     <p class="text-[10px] font-bold text-apple-secondaryLabel">"存储占用"</p>
-                    <p class="text-lg font-bold text-apple-label dark:text-apple-darkLabel">{storage}</p>
+                    <p class="text-lg font-bold text-apple-label dark:text-apple-darkLabel"><DisplayText value=storage.to_string() /></p>
                 </div>
                 <div class="p-3 bg-apple-gray-200/50 dark:bg-white/10 rounded-apple-xl">
                     <p class="text-[10px] font-bold text-apple-secondaryLabel">"当前连接"</p>
-                    <p class="text-lg font-bold text-apple-label dark:text-apple-darkLabel">{connections}</p>
+                    <p class="text-lg font-bold text-apple-label dark:text-apple-darkLabel"><DisplayText value=connections.to_string() /></p>
                 </div>
             </div>
         </GlassCard>
@@ -435,8 +443,8 @@ pub fn FilesPage() -> impl IntoView {
             <GlassCard class="!p-0 overflow-hidden">
                 <div class="p-4 border-b border-apple-gray-200/50 dark:border-white/10 flex items-center gap-2">
                     <ButtonSimple variant="secondary" size="small" class="p-2">"←"</ButtonSimple>
-                    <div class="flex-1 bg-apple-gray-200/50 dark:bg-white/10 px-4 py-2 rounded-apple-xl text-sm font-mono text-apple-secondaryLabel">
-                        "/var/www/raven/crates/server/src"
+                    <div class="flex-1 bg-apple-gray-200/50 dark:bg-white/10 px-4 py-2 rounded-apple-xl flex items-center">
+                        <DisplayText value="/var/www/raven/crates/server/src".to_string() class="text-apple-secondaryLabel" />
                     </div>
                     <ButtonSimple size="small">"上传"</ButtonSimple>
                 </div>
@@ -465,9 +473,9 @@ fn FileRow(name: &'static str, size: &'static str, date: &'static str, perms: &'
             <TableCell class="flex items-center gap-3 font-medium cursor-pointer">
                 {if is_dir { "📁" } else { "📄" }} {name}
             </TableCell>
-            <TableCell class="text-apple-secondaryLabel">{size}</TableCell>
-            <TableCell class="text-apple-secondaryLabel">{date}</TableCell>
-            <TableCell class="text-right font-mono text-xs">{perms}</TableCell>
+            <TableCell class="text-apple-secondaryLabel"><DisplayText value=size.to_string() /></TableCell>
+            <TableCell class="text-apple-secondaryLabel"><DisplayText value=date.to_string() /></TableCell>
+            <TableCell class="text-right"><DisplayText value=perms.to_string() /></TableCell>
         </TableRow>
     }
 }
@@ -508,7 +516,7 @@ pub fn AuditPage() -> impl IntoView {
                     </TableHeader>
                     <TableBody>
                         <TableRow>
-                            <TableCell class="text-xs">"2026-01-23 10:45"</TableCell>
+                            <TableCell class="text-xs"><DisplayText value="2026-01-23 10:45".to_string() /></TableCell>
                             <TableCell class="font-bold">"Admin"</TableCell>
                             <TableCell>"重启服务"</TableCell>
                             <TableCell>"web-prod-01"</TableCell>
@@ -547,9 +555,7 @@ fn UserCard(name: &'static str, role: &'static str, email: &'static str) -> impl
     view! {
         <GlassCard>
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-apple-blue to-apple-indigo rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    {name.chars().next().unwrap().to_string()}
-                </div>
+                <Avatar name=name.to_string() size="large" class="rounded-full" />
                 <div>
                     <h4 class="font-bold text-lg text-apple-label dark:text-apple-darkLabel">{name}</h4>
                     <p class="text-xs text-apple-secondaryLabel mb-2">{email}</p>
@@ -587,7 +593,7 @@ pub fn SettingsPage() -> impl IntoView {
                                 <p class="font-medium text-apple-label dark:text-apple-darkLabel">"自动备份"</p>
                                 <p class="text-xs text-apple-secondaryLabel">"每24小时备份一次数据库"</p>
                             </div>
-                            <div class="w-12 h-6 bg-apple-blue rounded-full relative"><div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
+                            <Switch checked=true />
                         </div>
                     </div>
                 </GlassCard>

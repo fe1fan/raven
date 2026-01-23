@@ -73,15 +73,16 @@ pub fn Checkbox(
         <label class=format!("inline-flex items-center cursor-pointer group {}", class)>
             <div class="relative">
                 <input type="checkbox" checked=checked class="peer sr-only"/>
-                <div class="w-5 h-5 bg-apple-gray-200 dark:bg-apple-gray-600 rounded-md border border-apple-gray-300 dark:border-apple-gray-500 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center">
+                <div class="w-5 h-5 bg-apple-gray-200/50 dark:bg-white/10 rounded-md border border-apple-gray-200/50 dark:border-white/10 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center backdrop-blur-md">
                     <svg class="w-3.5 h-3.5 text-white scale-0 peer-checked:scale-100 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
+                <div class="absolute inset-0 rounded-md ring-0 peer-focus:ring-2 peer-focus:ring-apple-blue/50 transition-all"></div>
             </div>
             {match label {
                 Some(text) => view! {
-                    <span class="ml-2 text-sm text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
+                    <span class="ml-2 text-sm font-medium text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
                         {text}
                     </span>
                 }.into_view(),
@@ -103,13 +104,14 @@ pub fn Radio(
         <label class=format!("inline-flex items-center cursor-pointer group {}", class)>
             <div class="relative">
                 <input type="radio" name=name checked=checked class="peer sr-only"/>
-                <div class="w-5 h-5 bg-apple-gray-200 dark:bg-apple-gray-600 rounded-full border border-apple-gray-300 dark:border-apple-gray-500 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center">
-                    <div class="w-2 h-2 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform duration-200"></div>
+                <div class="w-5 h-5 bg-apple-gray-200/50 dark:bg-white/10 rounded-full border border-apple-gray-200/50 dark:border-white/10 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center backdrop-blur-md">
+                    <div class="w-2 h-2 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform duration-200 shadow-sm"></div>
                 </div>
+                <div class="absolute inset-0 rounded-full ring-0 peer-focus:ring-2 peer-focus:ring-apple-blue/50 transition-all"></div>
             </div>
             {match label {
                 Some(text) => view! {
-                    <span class="ml-2 text-sm text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
+                    <span class="ml-2 text-sm font-medium text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
                         {text}
                     </span>
                 }.into_view(),
@@ -130,27 +132,226 @@ pub fn Textarea(
         <textarea
             placeholder=placeholder
             rows=rows
-            class=format!("w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-3 text-sm placeholder-apple-secondaryLabel dark:placeholder-apple-darkSecondaryLabel text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all resize-none {}", class)
+            class=format!("w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-3 text-sm placeholder-apple-secondaryLabel dark:placeholder-apple-darkSecondaryLabel text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all resize-none shadow-inner {}", class)
         ></textarea>
     }
 }
 
-// 选择框组件
+// 自定义下拉选择组件
 #[component]
 pub fn Select(
+    #[prop(optional)] options: Vec<(String, String)>, // (value, label)
+    #[prop(optional)] selected: Option<RwSignal<String>>,
+    #[prop(optional, default = "请选择")] placeholder: &'static str,
     #[prop(optional, default = "")] class: &'static str,
-    children: Children,
 ) -> impl IntoView {
+    // Use local signal if no external signal provided (for demo/stateless usage)
+    let internal_selected = create_rw_signal(String::new());
+    let selected_signal = selected.unwrap_or(internal_selected);
+
+    let _container_ref = create_node_ref::<html::Details>();
+
+    // Compute display label
+    let options_for_label = options.clone();
+    let display_label = move || {
+        let val = selected_signal.get();
+        if val.is_empty() {
+            placeholder.to_string()
+        } else {
+            options_for_label.iter()
+                .find(|(v, _)| *v == val)
+                .map(|(_, l)| l.clone())
+                .unwrap_or(val)
+        }
+    };
+
     view! {
-        <div class="relative">
-             <select class=format!("appearance-none w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 pr-8 text-sm text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all cursor-pointer {}", class)>
-                {children()}
-            </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-apple-secondaryLabel">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <details class=format!("relative min-w-[140px] group/select {}", class) node_ref=_container_ref>
+            <summary class="list-none w-full flex items-center justify-between bg-apple-gray-200/50 dark:bg-white/10 border border-transparent hover:border-apple-gray-300 dark:hover:border-white/20 rounded-apple-xl px-4 py-2 text-sm text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all duration-200 cursor-pointer">
+                <span class="truncate">{display_label}</span>
+                <svg
+                    class="w-4 h-4 text-apple-secondaryLabel transition-transform duration-200 group-open/select:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
+            </summary>
+
+            <div class="absolute z-50 mt-2 w-full glass-card rounded-apple-xl shadow-xl border border-apple-gray-200/50 dark:border-white/10 overflow-hidden">
+                <div class="max-h-60 overflow-y-auto py-1">
+                    {options.clone().into_iter().map(|(val, label)| {
+                        let val_clone = val.clone();
+                        let label_clone = label.clone();
+                        view! {
+                            <div
+                                class="px-4 py-2 text-sm text-apple-label dark:text-apple-darkLabel hover:bg-apple-blue hover:text-white cursor-pointer transition-colors flex items-center justify-between group"
+                                on:click=move |_| {
+                                    selected_signal.set(val_clone.clone());
+                                    // Close details on selection
+                                    if let Some(details) = _container_ref.get() {
+                                        let _ = details.remove_attribute("open");
+                                    }
+                                }
+                                attr:onclick="this.closest('details').removeAttribute('open'); this.closest('details').querySelector('summary .truncate').textContent = this.firstElementChild.textContent;"
+                            >
+                                <span>{label_clone}</span>
+                                {move || if selected_signal.get() == val {
+                                    view! { <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> }.into_view()
+                                } else {
+                                    view! {}.into_view()
+                                }}
+                            </div>
+                        }
+                    }).collect_view()}
+                </div>
             </div>
+        </details>
+    }
+}
+
+// 开关组件
+#[component]
+pub fn Switch(
+    #[prop(optional)] checked: bool,
+) -> impl IntoView {
+    let (is_checked, set_checked) = create_signal(checked);
+
+    view! {
+        <button
+            type="button"
+            role="switch"
+            aria-checked=move || is_checked.get().to_string()
+            on:click=move |_| set_checked.update(|v| *v = !*v)
+            class=move || format!(
+                "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-apple-blue/50 focus:ring-offset-2 {}",
+                if is_checked.get() { "bg-apple-green" } else { "bg-apple-gray-200 dark:bg-apple-gray-600" }
+            )
+        >
+            <span
+                aria-hidden="true"
+                class=move || format!(
+                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {}",
+                    if is_checked.get() { "translate-x-5" } else { "translate-x-0" }
+                )
+            />
+        </button>
+    }
+}
+
+// 分段控制器组件
+#[component]
+pub fn SegmentedControl(
+    options: Vec<&'static str>,
+    #[prop(optional)] active_index: usize,
+) -> impl IntoView {
+    let (current, set_current) = create_signal(active_index);
+
+    view! {
+        <div class="flex gap-1 p-1 bg-apple-gray-200/50 dark:bg-white/10 w-fit rounded-apple-2xl">
+            {options.into_iter().enumerate().map(|(idx, label)| {
+                view! {
+                    <button
+                        on:click=move |_| set_current.set(idx)
+                        class=move || {
+                            if current.get() == idx {
+                                "px-6 py-2 bg-white dark:bg-white/10 shadow-sm rounded-apple-xl text-sm font-bold text-apple-label dark:text-apple-darkLabel transition-all"
+                            } else {
+                                "px-6 py-2 text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel text-sm font-medium hover:text-apple-label dark:hover:text-apple-darkLabel transition-all"
+                            }
+                        }
+                    >
+                        {label}
+                    </button>
+                }
+            }).collect_view()}
+        </div>
+    }
+}
+
+// 头像组件
+#[component]
+pub fn Avatar(
+    #[prop(into)] name: String,
+    #[prop(optional, default = "medium")] size: &'static str,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    let initial = name.chars().next().unwrap_or('?').to_uppercase().to_string();
+
+    let size_class = match size {
+        "small" => "w-8 h-8 text-xs",
+        "medium" => "w-9 h-9 text-sm",
+        "large" => "w-14 h-14 text-xl",
+        _ => "w-10 h-10 text-base",
+    };
+
+    view! {
+        <div class=format!("{} bg-gradient-to-br from-apple-blue to-apple-indigo flex items-center justify-center text-white font-bold shadow-md rounded-full {}", size_class, class)>
+            {initial}
+        </div>
+    }
+}
+
+// 用户资料组件
+#[component]
+pub fn UserProfile(
+    name: &'static str,
+    role: &'static str,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    view! {
+        <div class=format!("flex items-center gap-3 {}", class)>
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-semibold text-apple-label dark:text-apple-darkLabel">{name}</p>
+                <p class="text-[10px] text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel">{role}</p>
+            </div>
+            <Avatar name=name.to_string() size="medium" class="cursor-pointer hover:scale-105 transition-transform"/>
+        </div>
+    }
+}
+
+// 数据展示组件 (等宽字体)
+#[component]
+pub fn DisplayText(
+    #[prop(into)] value: String,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    view! {
+        <span class=format!("font-mono text-sm text-apple-label dark:text-apple-darkLabel {}", class)>
+            {value}
+        </span>
+    }
+}
+
+// 代码编辑器组件 (带行号)
+#[component]
+pub fn CodeEditor(
+    #[prop(optional, into)] value: String,
+    #[prop(optional, default = "")] placeholder: &'static str,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    let (content, set_content) = create_signal(value);
+
+    let line_numbers = move || {
+        let lines = content.get().lines().count().max(1);
+        (1..=lines).map(|n| n.to_string()).collect::<Vec<_>>().join("\n")
+    };
+
+    view! {
+        <div class=format!("relative flex bg-[#1e1e1e] rounded-apple-xl overflow-hidden border border-white/10 shadow-inner {}", class)>
+            // Line numbers
+            <div class="py-3 pl-3 pr-2 text-right bg-[#252525] border-r border-white/10 select-none min-w-[2.5rem]">
+                <pre class="text-sm font-mono text-apple-gray-500 leading-6">{line_numbers}</pre>
+            </div>
+            // Editor area
+            <textarea
+                class="flex-1 bg-transparent text-gray-300 p-3 text-sm font-mono leading-6 focus:outline-none resize-none"
+                placeholder=placeholder
+                on:input=move |ev| set_content.set(event_target_value(&ev))
+                prop:value=content
+                spellcheck="false"
+            ></textarea>
         </div>
     }
 }
@@ -322,7 +523,9 @@ pub fn DashboardCard(
                 </div>
                 <Badge text=badge.to_string() variant=badge_type/>
             </div>
-            <p class="text-3xl font-bold tracking-tight text-apple-label dark:text-apple-darkLabel">{value}</p>
+            <p class="text-3xl font-bold tracking-tight text-apple-label dark:text-apple-darkLabel">
+                <DisplayText value=value.to_string() class="text-3xl font-bold" />
+            </p>
             <p class="text-sm text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel font-medium mt-1">{title}</p>
         </div>
     }
@@ -340,7 +543,9 @@ pub fn ServerStatCard(value: &'static str, label: &'static str, color: &'static 
     view! {
         <div class="glass-card p-4 rounded-apple-2xl flex items-center justify-between">
             <div>
-                <p class="text-2xl font-bold text-apple-label dark:text-apple-darkLabel">{value}</p>
+                <p class="text-2xl font-bold text-apple-label dark:text-apple-darkLabel">
+                    <DisplayText value=value.to_string() class="text-2xl font-bold" />
+                </p>
                 <p class="text-xs font-medium text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel mt-0.5">{label}</p>
             </div>
             <div class=format!("w-10 h-10 rounded-apple-xl flex items-center justify-center {}", bg_color)>
@@ -511,14 +716,8 @@ fn Header() -> impl IntoView {
                     </button>
 
                     // 用户头像
-                    <div class="flex items-center gap-3 pl-4 ml-2 border-l border-apple-gray-200/50 dark:border-white/10">
-                        <div class="text-right hidden sm:block">
-                            <p class="text-xs font-semibold text-apple-label dark:text-apple-darkLabel">"Admin"</p>
-                            <p class="text-[10px] text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel">"超级管理员"</p>
-                        </div>
-                        <div class="w-9 h-9 bg-gradient-to-br from-apple-blue to-apple-indigo rounded-apple-xl flex items-center justify-center text-white font-bold shadow-md cursor-pointer hover:scale-105 transition-transform">
-                            "A"
-                        </div>
+                    <div class="pl-4 ml-2 border-l border-apple-gray-200/50 dark:border-white/10">
+                        <UserProfile name="Admin" role="超级管理员" />
                     </div>
                 </div>
             </div>

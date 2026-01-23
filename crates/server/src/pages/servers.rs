@@ -22,22 +22,28 @@ pub fn ServersPage() -> impl IntoView {
                 <ServerStatCard value="128" label="总计" color="primary"/>
             </div>
 
-            <GlassCard class="!p-0 overflow-hidden">
-                <div class="p-4 border-b border-apple-gray-200/50 dark:border-white/10 flex flex-wrap items-center gap-4">
+            <GlassCard class="!p-0">
+                <div class="relative z-10 p-4 border-b border-apple-gray-200/50 dark:border-white/10 flex flex-wrap items-center gap-4">
                     <div class="flex gap-2 w-full sm:w-auto">
                         <div class="w-32">
-                            <Select>
-                                <option>"所有环境"</option>
-                                <option>"生产环境"</option>
-                                <option>"测试环境"</option>
-                            </Select>
+                            <Select
+                                placeholder="所有环境"
+                                options=vec![
+                                    ("all".to_string(), "所有环境".to_string()),
+                                    ("prod".to_string(), "生产环境".to_string()),
+                                    ("test".to_string(), "测试环境".to_string()),
+                                ]
+                            />
                         </div>
                         <div class="w-32">
-                            <Select>
-                                <option>"所有状态"</option>
-                                <option>"在线"</option>
-                                <option>"离线"</option>
-                            </Select>
+                            <Select
+                                placeholder="所有状态"
+                                options=vec![
+                                    ("all".to_string(), "所有状态".to_string()),
+                                    ("online".to_string(), "在线".to_string()),
+                                    ("offline".to_string(), "离线".to_string()),
+                                ]
+                            />
                         </div>
                     </div>
                     <div class="flex-1 min-w-[200px]">
@@ -49,8 +55,9 @@ pub fn ServersPage() -> impl IntoView {
                         />
                     </div>
                 </div>
-                <Table>
-                    <TableHeader>
+                <div class="overflow-hidden rounded-b-apple-3xl">
+                    <Table>
+                        <TableHeader>
                         <TableHead>"服务器"</TableHead>
                         <TableHead>"IP地址"</TableHead>
                         <TableHead>"状态"</TableHead>
@@ -99,7 +106,8 @@ pub fn ServersPage() -> impl IntoView {
                             env="测试"
                         />
                     </TableBody>
-                </Table>
+                    </Table>
+                </div>
             </GlassCard>
         </Layout>
     }
@@ -147,7 +155,7 @@ fn ServerTableRow(
                 </div>
             </TableCell>
             <TableCell>
-                <div class="font-mono text-xs text-apple-label dark:text-apple-darkLabel">{ip}</div>
+                <DisplayText value=ip.to_string() class="text-xs" />
             </TableCell>
             <TableCell>{status_view}</TableCell>
             <TableCell>
@@ -179,7 +187,7 @@ fn ResourceBar(label: &'static str, value: &'static str, color: &'static str) ->
             <div class="flex-1 h-1.5 bg-apple-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
                 <div class=format!("h-full {} rounded-full transition-all duration-500", color) style=format!("width: {}%", value)></div>
             </div>
-            <span class="text-[10px] font-mono text-apple-secondaryLabel w-8 text-right">{value}"%"</span>
+            <DisplayText value=format!("{}%", value) class="text-[10px] w-8 text-right text-apple-secondaryLabel" />
         </div>
     }
 }

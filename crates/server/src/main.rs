@@ -4,6 +4,7 @@ use axum::{
     Router,
     routing::get,
 };
+use tower_http::services::ServeDir;
 use tower_http::cors::CorsLayer;
 
 mod app;
@@ -42,6 +43,9 @@ async fn main() {
 
     // 构建路由
     let app = Router::new()
+        // 静态文件服务
+        .nest_service("/pkg", ServeDir::new(format!("{}/{}", leptos_options.site_root, leptos_options.site_pkg_dir)))
+        .nest_service("/assets", ServeDir::new("assets"))
         // 健康检查接口
         .route("/health", get(|| async { "OK" }))
 
