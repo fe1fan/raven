@@ -10,9 +10,9 @@ pub fn DashboardPage() -> impl IntoView {
                 subtitle="查看所有节点的实时运行指标"
                 action=view! {
                     <div class="flex gap-3">
-                        <button class="px-4 py-2 bg-apple-gray-200 dark:bg-white/10 rounded-apple-xl text-sm font-medium text-apple-label dark:text-apple-darkLabel hover:bg-apple-gray-300 dark:hover:bg-white/20 transition-colors">
+                        <ButtonSimple variant="secondary" size="small">
                             "刷新数据"
-                        </button>
+                        </ButtonSimple>
                     </div>
                 }.into_view()
             />
@@ -89,8 +89,8 @@ pub fn MonitoringPage() -> impl IntoView {
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-bold text-apple-label dark:text-apple-darkLabel">"实时性能监控"</h3>
                     <div class="flex gap-2">
-                        <span class="px-3 py-1 bg-apple-blue/10 text-apple-blue text-xs font-bold rounded-full">"CPU"</span>
-                        <span class="px-3 py-1 bg-apple-gray-200 dark:bg-white/10 text-apple-secondaryLabel text-xs font-bold rounded-full">"Memory"</span>
+                        <Badge text="CPU" variant="primary" />
+                        <Badge text="Memory" variant="secondary" />
                     </div>
                 </div>
                 <div class="h-80 flex items-center justify-center border-2 border-dashed border-apple-gray-300 dark:border-white/10 rounded-apple-xl">
@@ -130,37 +130,39 @@ pub fn AlertsPage() -> impl IntoView {
             />
 
             <div class="flex gap-4 mb-6">
-                <div class="flex-1 relative">
-                    <input type="text" placeholder="搜索告警..." class="w-full pl-10 pr-4 py-2 bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl text-sm focus:ring-2 focus:ring-apple-blue/50" />
-                    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-apple-secondaryLabel">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
+                <div class="flex-1">
+                    <Input
+                        placeholder="搜索告警..."
+                        icon=view! {
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        }.into_view()
+                    />
                 </div>
-                <select class="bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 text-sm">
-                    <option>"所有级别"</option>
-                    <option>"严重"</option>
-                    <option>"警告"</option>
-                </select>
+                <div class="w-40">
+                    <Select>
+                        <option>"所有级别"</option>
+                        <option>"严重"</option>
+                        <option>"警告"</option>
+                    </Select>
+                </div>
             </div>
 
             <GlassCard class="!p-0 overflow-hidden">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-apple-gray-100/50 dark:bg-white/5 border-b border-apple-gray-200/50 dark:border-white/10 text-xs uppercase text-apple-secondaryLabel font-semibold">
-                        <tr>
-                            <th class="px-6 py-4">"级别"</th>
-                            <th class="px-6 py-4">"告警内容"</th>
-                            <th class="px-6 py-4">"来源"</th>
-                            <th class="px-6 py-4">"状态"</th>
-                            <th class="px-6 py-4">"时间"</th>
-                            <th class="px-6 py-4 text-right">"操作"</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-apple-gray-200/50 dark:divide-white/5">
+                <Table>
+                    <TableHeader>
+                        <TableHead>"级别"</TableHead>
+                        <TableHead>"告警内容"</TableHead>
+                        <TableHead>"来源"</TableHead>
+                        <TableHead>"状态"</TableHead>
+                        <TableHead>"时间"</TableHead>
+                        <TableHead><div class="text-right">"操作"</div></TableHead>
+                    </TableHeader>
+                    <TableBody>
                         <AlertRow level="danger" content="CPU 使用率超过 95%" source="web-prod-01" status="未处理" time="2分钟前" />
                         <AlertRow level="warning" content="内存使用率过高 (85%)" source="db-master-01" status="已确认" time="15分钟前" />
                         <AlertRow level="warning" content="磁盘空间不足 (剩余 10%)" source="cache-01" status="未处理" time="1小时前" />
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </GlassCard>
         </Layout>
     }
@@ -169,18 +171,18 @@ pub fn AlertsPage() -> impl IntoView {
 #[component]
 fn AlertRow(level: &'static str, content: &'static str, source: &'static str, status: &'static str, time: &'static str) -> impl IntoView {
     view! {
-        <tr class="hover:bg-apple-gray-200/50 dark:hover:bg-white/5 transition-colors">
-            <td class="px-6 py-4">
+        <TableRow>
+            <TableCell>
                 <Badge text=level.to_uppercase() variant=level />
-            </td>
-            <td class="px-6 py-4 font-medium text-apple-label dark:text-apple-darkLabel">{content}</td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{source}</td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{status}</td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{time}</td>
-            <td class="px-6 py-4 text-right">
-                <button class="text-apple-blue font-medium hover:underline">"处理"</button>
-            </td>
-        </tr>
+            </TableCell>
+            <TableCell class="font-medium">{content}</TableCell>
+            <TableCell class="text-apple-secondaryLabel">{source}</TableCell>
+            <TableCell class="text-apple-secondaryLabel">{status}</TableCell>
+            <TableCell class="text-apple-secondaryLabel">{time}</TableCell>
+            <TableCell class="text-right">
+                <ButtonSimple variant="ghost" size="small" class="text-apple-blue hover:underline">"处理"</ButtonSimple>
+            </TableCell>
+        </TableRow>
     }
 }
 
@@ -194,12 +196,14 @@ pub fn TerminalPage() -> impl IntoView {
             />
 
             <div class="flex gap-4 mb-6">
-                <select class="flex-1 bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 text-sm">
-                    <option>"选择服务器..."</option>
-                    <option>"web-prod-01 (192.168.1.101)"</option>
-                    <option>"db-master-01 (192.168.1.201)"</option>
-                </select>
-                <button class="bg-apple-blue text-white px-6 py-2 rounded-apple-xl text-sm font-bold">"连接"</button>
+                <div class="flex-1">
+                    <Select>
+                        <option>"选择服务器..."</option>
+                        <option>"web-prod-01 (192.168.1.101)"</option>
+                        <option>"db-master-01 (192.168.1.201)"</option>
+                    </Select>
+                </div>
+                <ButtonSimple>"连接"</ButtonSimple>
             </div>
 
             <div class="bg-[#1C1C1E] rounded-apple-3xl p-6 h-[600px] shadow-2xl border border-white/5 font-mono text-apple-green flex flex-col">
@@ -238,24 +242,24 @@ pub fn CommandsPage() -> impl IntoView {
                         <div>
                             <label class="block text-xs font-bold text-apple-secondaryLabel uppercase mb-1">"目标服务器"</label>
                             <div class="p-3 bg-apple-gray-200/50 dark:bg-white/10 rounded-apple-xl space-y-2">
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked /> "生产环境所有节点"</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" /> "web-prod-01"</label>
-                                <label class="flex items-center gap-2 text-sm"><input type="checkbox" /> "web-prod-02"</label>
+                                <Checkbox checked=true label="生产环境所有节点".to_string() />
+                                <Checkbox label="web-prod-01".to_string() />
+                                <Checkbox label="web-prod-02".to_string() />
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-apple-secondaryLabel uppercase mb-1">"超时设置"</label>
-                            <input type="number" value="30" class="w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 text-sm" />
+                            <Input type_="number" placeholder="30" />
                         </div>
                     </div>
                 </GlassCard>
 
                 <GlassCard class="lg:col-span-2">
                     <h3 class="text-lg font-bold mb-4 text-apple-label dark:text-apple-darkLabel">"脚本编辑"</h3>
-                    <textarea class="w-full h-48 bg-[#1C1C1E] text-white font-mono p-4 rounded-apple-xl border border-white/5 focus:outline-none" placeholder="#!/bin/bash\n\napt-get update\napt-get upgrade -y"></textarea>
+                    <Textarea class="h-48 font-mono" placeholder="#!/bin/bash\n\napt-get update\napt-get upgrade -y" />
                     <div class="mt-4 flex justify-end gap-3">
-                        <button class="px-6 py-2 bg-apple-gray-200 dark:bg-white/10 rounded-apple-xl text-sm font-bold">"保存模版"</button>
-                        <button class="px-6 py-2 bg-apple-blue text-white rounded-apple-xl text-sm font-bold">"立即执行"</button>
+                        <ButtonSimple variant="secondary">"保存模版"</ButtonSimple>
+                        <ButtonSimple>"立即执行"</ButtonSimple>
                     </div>
                 </GlassCard>
             </div>
@@ -271,27 +275,27 @@ pub fn CronjobsPage() -> impl IntoView {
                 title="定时任务"
                 subtitle="管理系统自动化脚本与定时作业"
                 action=view! {
-                    <button class="bg-apple-blue text-white px-5 py-2.5 rounded-apple-xl text-sm font-bold">"创建任务"</button>
+                    <ButtonSimple>
+                        "创建任务"
+                    </ButtonSimple>
                 }.into_view()
             />
 
             <GlassCard class="!p-0 overflow-hidden">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-apple-gray-100/50 dark:bg-white/5 border-b border-apple-gray-200/50 dark:border-white/10 text-xs uppercase text-apple-secondaryLabel font-semibold">
-                        <tr>
-                            <th class="px-6 py-4">"任务名称"</th>
-                            <th class="px-6 py-4">"执行计划"</th>
-                            <th class="px-6 py-4">"最近运行"</th>
-                            <th class="px-6 py-4">"状态"</th>
-                            <th class="px-6 py-4 text-right">"操作"</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-apple-gray-200/50 dark:divide-white/5">
+                <Table>
+                    <TableHeader>
+                        <TableHead>"任务名称"</TableHead>
+                        <TableHead>"执行计划"</TableHead>
+                        <TableHead>"最近运行"</TableHead>
+                        <TableHead>"状态"</TableHead>
+                        <TableHead><div class="text-right">"操作"</div></TableHead>
+                    </TableHeader>
+                    <TableBody>
                         <CronjobRow name="每日数据库备份" schedule="0 0 * * *" last_run="22小时前" status="success" />
                         <CronjobRow name="清理临时文件" schedule="0 2 * * *" last_run="20小时前" status="success" />
                         <CronjobRow name="证书自动更新" schedule="0 0 1 * *" last_run="20天前" status="warning" />
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </GlassCard>
         </Layout>
     }
@@ -300,17 +304,17 @@ pub fn CronjobsPage() -> impl IntoView {
 #[component]
 fn CronjobRow(name: &'static str, schedule: &'static str, last_run: &'static str, status: &'static str) -> impl IntoView {
     view! {
-        <tr class="hover:bg-apple-gray-200/50 dark:hover:bg-white/5 transition-colors">
-            <td class="px-6 py-4 font-medium text-apple-label dark:text-apple-darkLabel">{name}</td>
-            <td class="px-6 py-4 font-mono text-xs">{schedule}</td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{last_run}</td>
-            <td class="px-6 py-4">
+        <TableRow>
+            <TableCell class="font-medium">{name}</TableCell>
+            <TableCell class="font-mono text-xs">{schedule}</TableCell>
+            <TableCell class="text-apple-secondaryLabel">{last_run}</TableCell>
+            <TableCell>
                 <Badge text=status.to_uppercase() variant=status />
-            </td>
-            <td class="px-6 py-4 text-right">
-                <button class="text-apple-secondaryLabel hover:text-apple-blue transition-colors">"编辑"</button>
-            </td>
-        </tr>
+            </TableCell>
+            <TableCell class="text-right">
+                <ButtonSimple variant="ghost" size="small" class="text-apple-secondaryLabel hover:text-apple-blue">"编辑"</ButtonSimple>
+            </TableCell>
+        </TableRow>
     }
 }
 
@@ -430,27 +434,25 @@ pub fn FilesPage() -> impl IntoView {
 
             <GlassCard class="!p-0 overflow-hidden">
                 <div class="p-4 border-b border-apple-gray-200/50 dark:border-white/10 flex items-center gap-2">
-                    <button class="p-2 hover:bg-apple-gray-200 rounded-lg">"←"</button>
+                    <ButtonSimple variant="secondary" size="small" class="p-2">"←"</ButtonSimple>
                     <div class="flex-1 bg-apple-gray-200/50 dark:bg-white/10 px-4 py-2 rounded-apple-xl text-sm font-mono text-apple-secondaryLabel">
                         "/var/www/raven/crates/server/src"
                     </div>
-                    <button class="bg-apple-blue text-white px-4 py-2 rounded-apple-xl text-sm font-bold">"上传"</button>
+                    <ButtonSimple size="small">"上传"</ButtonSimple>
                 </div>
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-apple-gray-100/50 dark:bg-white/5 text-xs uppercase text-apple-secondaryLabel font-semibold">
-                        <tr>
-                            <th class="px-6 py-4">"文件名"</th>
-                            <th class="px-6 py-4">"大小"</th>
-                            <th class="px-6 py-4">"修改时间"</th>
-                            <th class="px-6 py-4 text-right">"权限"</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-apple-gray-200/50 dark:divide-white/5">
+                <Table>
+                    <TableHeader>
+                        <TableHead>"文件名"</TableHead>
+                        <TableHead>"大小"</TableHead>
+                        <TableHead>"修改时间"</TableHead>
+                        <TableHead><div class="text-right">"权限"</div></TableHead>
+                    </TableHeader>
+                    <TableBody>
                         <FileRow name="main.rs" size="12 KB" date="2小时前" perms="644" />
                         <FileRow name="app.rs" size="8 KB" date="5小时前" perms="644" />
                         <FileRow name="assets/" size="-" date="1天前" perms="755" is_dir=true />
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </GlassCard>
         </Layout>
     }
@@ -459,14 +461,14 @@ pub fn FilesPage() -> impl IntoView {
 #[component]
 fn FileRow(name: &'static str, size: &'static str, date: &'static str, perms: &'static str, #[prop(optional)] is_dir: bool) -> impl IntoView {
     view! {
-        <tr class="hover:bg-apple-gray-200/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
-            <td class="px-6 py-4 flex items-center gap-3 font-medium text-apple-label dark:text-apple-darkLabel">
+        <TableRow>
+            <TableCell class="flex items-center gap-3 font-medium cursor-pointer">
                 {if is_dir { "📁" } else { "📄" }} {name}
-            </td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{size}</td>
-            <td class="px-6 py-4 text-apple-secondaryLabel">{date}</td>
-            <td class="px-6 py-4 text-right font-mono text-xs">{perms}</td>
-        </tr>
+            </TableCell>
+            <TableCell class="text-apple-secondaryLabel">{size}</TableCell>
+            <TableCell class="text-apple-secondaryLabel">{date}</TableCell>
+            <TableCell class="text-right font-mono text-xs">{perms}</TableCell>
+        </TableRow>
     }
 }
 
@@ -529,7 +531,7 @@ pub fn UsersPage() -> impl IntoView {
                 title="用户权限"
                 subtitle="管理团队成员与系统访问控制"
                 action=view! {
-                    <button class="bg-apple-blue text-white px-5 py-2.5 rounded-apple-xl text-sm font-bold">"添加用户"</button>
+                    <ButtonSimple>"添加用户"</ButtonSimple>
                 }.into_view()
             />
 
@@ -578,7 +580,9 @@ pub fn SettingsPage() -> impl IntoView {
                                 <p class="font-medium text-apple-label dark:text-apple-darkLabel">"站点名称"</p>
                                 <p class="text-xs text-apple-secondaryLabel">"显示在浏览器标签页与侧边栏"</p>
                             </div>
-                            <input type="text" value="Raven" class="bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 text-sm w-48" />
+                            <div class="w-48">
+                                <Input placeholder="Raven" />
+                            </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <div>
@@ -593,7 +597,7 @@ pub fn SettingsPage() -> impl IntoView {
                 <GlassCard>
                     <h3 class="text-lg font-bold mb-4 text-apple-label dark:text-apple-darkLabel">"安全设置"</h3>
                     <div class="space-y-4">
-                        <button class="w-full py-3 bg-apple-red/10 text-apple-red font-bold rounded-apple-xl">"重置所有 API 密钥"</button>
+                        <ButtonSimple variant="danger" class="w-full">"重置所有 API 密钥"</ButtonSimple>
                     </div>
                 </GlassCard>
             </div>

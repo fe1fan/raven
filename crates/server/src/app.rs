@@ -22,11 +22,11 @@ pub fn App() -> impl IntoView {
                             border: 'rgba(0, 0, 0, 0.1)',
 
                             darkBg: '#000000',
-                            darkCard: 'rgba(28, 28, 30, 0.7)',
-                            darkLabel: '#FFFFFF',
-                            darkSecondaryLabel: 'rgba(235, 235, 245, 0.6)',
-                            darkTertiaryLabel: 'rgba(235, 235, 245, 0.3)',
-                            darkBorder: 'rgba(255, 255, 255, 0.12)',
+                            darkCard: 'rgba(28, 28, 30, 0.9)',
+                            darkLabel: '#F5F5F7',
+                            darkSecondaryLabel: 'rgba(235, 235, 245, 0.7)',
+                            darkTertiaryLabel: 'rgba(235, 235, 245, 0.4)',
+                            darkBorder: 'rgba(255, 255, 255, 0.18)',
 
                             blue: '#007AFF',
                             darkBlue: '#0A84FF',
@@ -130,8 +130,9 @@ pub fn App() -> impl IntoView {
                 -webkit-backdrop-filter: saturate(180%) blur(20px);
             }
             .dark .glass-card {
-                background: rgba(28, 28, 30, 0.7);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
             }
             html:not(.dark) .glass-card {
                 background: rgba(255, 255, 255, 0.7);
@@ -145,7 +146,9 @@ pub fn App() -> impl IntoView {
             html.sidebar-collapsed .sidebar-content { opacity: 0; visibility: hidden; width: 0; }
             html.sidebar-collapsed .nav-label { opacity: 0; visibility: hidden; width: 0; }
             html.sidebar-collapsed .collapse-icon { transform: rotate(180deg); }
-            html.sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+            html.sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; gap: 0 !important; }
+            html.sidebar-collapsed .sidebar-content { opacity: 0; visibility: hidden; width: 0; height: 0; margin: 0; overflow: hidden; }
+            html.sidebar-collapsed .sidebar-nav > div { margin-top: 0.5rem !important; }
             "
         </Style>
 

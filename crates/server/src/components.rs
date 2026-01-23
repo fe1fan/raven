@@ -1,6 +1,241 @@
 use leptos::*;
 use leptos_router::*;
 
+// 通用按钮组件 - 简化版
+#[component]
+pub fn ButtonSimple(
+    #[prop(optional, default = "primary")] variant: &'static str,
+    #[prop(optional, default = "medium")] size: &'static str,
+    #[prop(optional, default = "")] class: &'static str,
+    children: Children,
+) -> impl IntoView {
+    let base_class = "inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+
+    let variant_class = match variant {
+        "primary" => "bg-apple-blue hover:bg-apple-blue/90 text-white shadow-lg shadow-apple-blue/30 focus:ring-apple-blue/50",
+        "secondary" => "bg-apple-gray-200 dark:bg-apple-gray-700 text-apple-label dark:text-apple-darkLabel hover:bg-apple-gray-300 dark:hover:bg-apple-gray-600 focus:ring-apple-gray-400",
+        "danger" => "bg-apple-red hover:bg-apple-red/90 text-white shadow-lg shadow-apple-red/30 focus:ring-apple-red/50",
+        "ghost" => "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-apple-blue dark:text-apple-darkBlue",
+        "success" => "bg-apple-green hover:bg-apple-green/90 text-white shadow-lg shadow-apple-green/30 focus:ring-apple-green/50",
+        _ => "bg-apple-blue hover:bg-apple-blue/90 text-white shadow-lg shadow-apple-blue/30 focus:ring-apple-blue/50",
+    };
+
+    let size_class = match size {
+        "small" => "px-3 py-1.5 text-xs rounded-lg",
+        "medium" => "px-5 py-2.5 text-sm rounded-apple-xl",
+        "large" => "px-6 py-3 text-base rounded-apple-2xl",
+        _ => "px-5 py-2.5 text-sm rounded-apple-xl",
+    };
+
+    view! {
+        <button class=format!("{} {} {} {}", base_class, variant_class, size_class, class)>
+            {children()}
+        </button>
+    }
+}
+
+// 输入框组件
+#[component]
+pub fn Input(
+    #[prop(optional, default = "text")] type_: &'static str,
+    #[prop(optional, default = "")] placeholder: &'static str,
+    #[prop(optional, default = "")] class: &'static str,
+    #[prop(optional)] icon: Option<View>,
+) -> impl IntoView {
+    let icon_clone = icon.clone();
+    view! {
+        <div class="relative group">
+            {move || icon_clone.clone().map(|i| view! {
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel group-focus-within:text-apple-blue transition-colors">
+                    {i}
+                </div>
+            })}
+            <input
+                type=type_
+                placeholder=placeholder
+                class=format!("w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl py-2 text-sm placeholder-apple-secondaryLabel dark:placeholder-apple-darkSecondaryLabel text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all {} {}",
+                    if icon.is_some() { "pl-9 pr-4" } else { "px-4" },
+                    class
+                )
+            />
+        </div>
+    }
+}
+
+// 复选框组件
+#[component]
+pub fn Checkbox(
+    #[prop(optional)] checked: bool,
+    #[prop(optional)] label: Option<String>,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    view! {
+        <label class=format!("inline-flex items-center cursor-pointer group {}", class)>
+            <div class="relative">
+                <input type="checkbox" checked=checked class="peer sr-only"/>
+                <div class="w-5 h-5 bg-apple-gray-200 dark:bg-apple-gray-600 rounded-md border border-apple-gray-300 dark:border-apple-gray-500 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white scale-0 peer-checked:scale-100 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </div>
+            {match label {
+                Some(text) => view! {
+                    <span class="ml-2 text-sm text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
+                        {text}
+                    </span>
+                }.into_view(),
+                None => view! {}.into_view()
+            }}
+        </label>
+    }
+}
+
+// 单选框组件
+#[component]
+pub fn Radio(
+    #[prop(optional)] checked: bool,
+    #[prop(optional)] name: &'static str,
+    #[prop(optional)] label: Option<String>,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    view! {
+        <label class=format!("inline-flex items-center cursor-pointer group {}", class)>
+            <div class="relative">
+                <input type="radio" name=name checked=checked class="peer sr-only"/>
+                <div class="w-5 h-5 bg-apple-gray-200 dark:bg-apple-gray-600 rounded-full border border-apple-gray-300 dark:border-apple-gray-500 peer-checked:bg-apple-blue peer-checked:border-apple-blue transition-all duration-200 flex items-center justify-center">
+                    <div class="w-2 h-2 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform duration-200"></div>
+                </div>
+            </div>
+            {match label {
+                Some(text) => view! {
+                    <span class="ml-2 text-sm text-apple-label dark:text-apple-darkLabel group-hover:text-apple-blue transition-colors">
+                        {text}
+                    </span>
+                }.into_view(),
+                None => view! {}.into_view()
+            }}
+        </label>
+    }
+}
+
+// 文本域组件
+#[component]
+pub fn Textarea(
+    #[prop(optional, default = "")] placeholder: &'static str,
+    #[prop(optional, default = 4)] rows: usize,
+    #[prop(optional, default = "")] class: &'static str,
+) -> impl IntoView {
+    view! {
+        <textarea
+            placeholder=placeholder
+            rows=rows
+            class=format!("w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-3 text-sm placeholder-apple-secondaryLabel dark:placeholder-apple-darkSecondaryLabel text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all resize-none {}", class)
+        ></textarea>
+    }
+}
+
+// 选择框组件
+#[component]
+pub fn Select(
+    #[prop(optional, default = "")] class: &'static str,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <div class="relative">
+             <select class=format!("appearance-none w-full bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl px-4 py-2 pr-8 text-sm text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all cursor-pointer {}", class)>
+                {children()}
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-apple-secondaryLabel">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+        </div>
+    }
+}
+
+// 表格组件系列
+#[component]
+pub fn Table(children: Children) -> impl IntoView {
+    view! {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                {children()}
+            </table>
+        </div>
+    }
+}
+
+#[component]
+pub fn TableHeader(children: Children) -> impl IntoView {
+    view! {
+        <thead>
+            <tr class="border-b border-apple-gray-200/50 dark:border-white/10">
+                {children()}
+            </tr>
+        </thead>
+    }
+}
+
+#[component]
+pub fn TableHead(children: Children) -> impl IntoView {
+    view! {
+        <th class="py-3 px-4 text-xs font-semibold text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel uppercase tracking-wider">
+            {children()}
+        </th>
+    }
+}
+
+#[component]
+pub fn TableBody(children: Children) -> impl IntoView {
+    view! {
+        <tbody class="divide-y divide-apple-gray-200/50 dark:divide-white/10">
+            {children()}
+        </tbody>
+    }
+}
+
+#[component]
+pub fn TableRow(children: Children) -> impl IntoView {
+    view! {
+        <tr class="group hover:bg-apple-blue/5 dark:hover:bg-white/5 transition-colors">
+            {children()}
+        </tr>
+    }
+}
+
+#[component]
+pub fn TableCell(
+    #[prop(optional, default = "")] class: &'static str,
+    children: Children
+) -> impl IntoView {
+    view! {
+        <td class=format!("py-3 px-4 text-sm text-apple-label dark:text-apple-darkLabel {}", class)>
+            {children()}
+        </td>
+    }
+}
+
+// 状态点组件
+#[component]
+pub fn StatusDot(
+    #[prop(optional, default = "success")] variant: &'static str,
+    #[prop(optional, default = true)] animate: bool,
+) -> impl IntoView {
+    let color_class = match variant {
+        "success" => "bg-apple-green",
+        "danger" => "bg-apple-red",
+        "warning" => "bg-apple-yellow",
+        "gray" | "offline" => "bg-apple-gray-500",
+        _ => "bg-apple-blue",
+    };
+
+    view! {
+        <span class=format!("w-1.5 h-1.5 rounded-full {} {}", color_class, if animate { "animate-pulse" } else { "" })></span>
+    }
+}
+
 #[component]
 pub fn Layout(children: Children) -> impl IntoView {
     view! {
@@ -54,11 +289,11 @@ pub fn Badge(
 ) -> impl IntoView {
     let base_class = "px-2.5 py-1 text-xs font-bold rounded-full border";
     let variant_class = match variant {
-        "success" => "bg-apple-green/10 text-apple-green dark:text-apple-darkGreen border-apple-green/20",
-        "danger" => "bg-apple-red/10 text-apple-red dark:text-apple-darkRed border-apple-red/20",
-        "warning" => "bg-apple-yellow/10 text-apple-yellow dark:text-apple-darkYellow border-apple-yellow/20",
-        "indigo" => "bg-apple-indigo/10 text-apple-indigo dark:text-apple-darkIndigo border-apple-indigo/20",
-        _ => "bg-apple-blue/10 text-apple-blue dark:text-apple-darkBlue border-apple-blue/20",
+        "success" => "bg-apple-green/10 text-apple-green dark:bg-apple-green/20 dark:text-apple-darkGreen border-apple-green/20",
+        "danger" => "bg-apple-red/10 text-apple-red dark:bg-apple-red/20 dark:text-apple-darkRed border-apple-red/20",
+        "warning" => "bg-apple-yellow/10 text-apple-yellow dark:bg-apple-yellow/20 dark:text-apple-darkYellow border-apple-yellow/20",
+        "indigo" => "bg-apple-indigo/10 text-apple-indigo dark:bg-apple-indigo/20 dark:text-apple-darkIndigo border-apple-indigo/20",
+        _ => "bg-apple-blue/10 text-apple-blue dark:bg-apple-blue/20 dark:text-apple-darkBlue border-apple-blue/20",
     };
 
     view! {
@@ -96,10 +331,10 @@ pub fn DashboardCard(
 #[component]
 pub fn ServerStatCard(value: &'static str, label: &'static str, color: &'static str) -> impl IntoView {
     let (text_color, bg_color) = match color {
-        "success" => ("text-apple-green", "bg-apple-green/10"),
-        "warning" => ("text-apple-yellow", "bg-apple-yellow/10"),
-        "danger" => ("text-apple-red", "bg-apple-red/10"),
-        _ => ("text-apple-blue", "bg-apple-blue/10"),
+        "success" => ("text-apple-green", "bg-apple-green/10 dark:bg-apple-green/20"),
+        "warning" => ("text-apple-yellow", "bg-apple-yellow/10 dark:bg-apple-yellow/20"),
+        "danger" => ("text-apple-red", "bg-apple-red/10 dark:bg-apple-red/20"),
+        _ => ("text-apple-blue", "bg-apple-blue/10 dark:bg-apple-blue/20"),
     };
 
     view! {
@@ -141,7 +376,7 @@ fn Sidebar() -> impl IntoView {
                 </button>
             </div>
 
-            <nav class="p-4 space-y-6 overflow-y-auto h-[calc(100vh-64px)]">
+            <nav class="sidebar-nav p-4 space-y-6 overflow-y-auto h-[calc(100vh-64px)]">
                 <NavSection title="概览">
                     <NavItem href="/" icon=Icon::Dashboard label="仪表盘" is_active=move || location.pathname.get() == "/"/>
                     <NavItem href="/servers" icon=Icon::Server label="服务器管理" is_active=move || location.pathname.get() == "/servers"/>
@@ -241,18 +476,14 @@ fn Header() -> impl IntoView {
             <div class="flex items-center justify-between px-6 h-full">
                 // 搜索框
                 <div class="flex-1 max-w-md">
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-4 h-4 text-apple-secondaryLabel group-focus-within:text-apple-blue transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <Input
+                        placeholder="搜索..."
+                        icon=view! {
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="搜索..."
-                            class="w-full pl-9 pr-4 py-2 bg-apple-gray-200/50 dark:bg-white/10 border-none rounded-apple-xl text-sm placeholder-apple-secondaryLabel dark:placeholder-apple-darkSecondaryLabel text-apple-label dark:text-apple-darkLabel focus:outline-none focus:ring-2 focus:ring-apple-blue/50 transition-all"
-                        />
-                    </div>
+                        }.into_view()
+                    />
                 </div>
 
                 // 右侧操作
