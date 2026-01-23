@@ -3,13 +3,11 @@ use leptos_router::*;
 
 #[component]
 pub fn Layout(children: Children) -> impl IntoView {
-    let (is_collapsed, set_is_collapsed) = create_signal(false);
-
     view! {
         <div class="min-h-screen flex bg-apple-gray-100 dark:bg-[#000000] transition-colors duration-300">
-            <Sidebar is_collapsed=is_collapsed set_is_collapsed=set_is_collapsed/>
-            <div class="flex-1 flex flex-col min-w-0 transition-all duration-300">
-                <Header is_collapsed=is_collapsed set_is_collapsed=set_is_collapsed/>
+            <Sidebar/>
+            <div class="flex-1 flex flex-col min-w-0">
+                <Header/>
                 <main class="flex-1 overflow-y-auto p-6 md:p-8">
                     <div class="max-w-7xl mx-auto">
                         {children()}
@@ -118,19 +116,13 @@ pub fn ServerStatCard(value: &'static str, label: &'static str, color: &'static 
 }
 
 #[component]
-fn Sidebar(
-    is_collapsed: ReadSignal<bool>,
-    set_is_collapsed: WriteSignal<bool>,
-) -> impl IntoView {
+fn Sidebar() -> impl IntoView {
     let location = use_location();
 
     view! {
-        <aside class=move || format!(
-            "flex-shrink-0 glass-card border-r border-apple-gray-200/50 dark:border-white/10 z-50 h-screen sticky top-0 transition-all duration-300 {}",
-            if is_collapsed.get() { "w-20" } else { "w-64" }
-        )>
+        <aside class="flex-shrink-0 glass-card border-r border-apple-gray-200/50 dark:border-white/10 z-50 h-screen sticky top-0 transition-all duration-300">
             <div class="h-16 flex items-center justify-between px-6 border-b border-apple-gray-200/50 dark:border-white/10">
-                <div class=move || format!("flex items-center gap-3 transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 invisible w-0" } else { "opacity-100 visible w-auto" })>
+                <div class="flex items-center gap-3 sidebar-content whitespace-nowrap overflow-hidden">
                     <img src="/assets/logo.png" class="w-8 h-8 rounded-lg shadow-sm" alt="Raven Logo"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-apple-gray-800 to-black hidden items-center justify-center text-white font-bold text-lg">
@@ -140,50 +132,47 @@ fn Sidebar(
                 </div>
 
                 <button
-                    on:click=move |_| set_is_collapsed.update(|v| *v = !*v)
-                    class=move || format!(
-                        "p-2 text-apple-secondaryLabel hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all {}",
-                        if is_collapsed.get() { "mx-auto" } else { "" }
-                    )
+                    onclick="toggleSidebar()"
+                    class="p-2 text-apple-secondaryLabel hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-all"
                 >
-                    <svg class=move || format!("w-5 h-5 transition-transform duration-300 {}", if is_collapsed.get() { "rotate-180" } else { "" }) fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 collapse-icon transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
                     </svg>
                 </button>
             </div>
 
             <nav class="p-4 space-y-6 overflow-y-auto h-[calc(100vh-64px)]">
-                <NavSection title="概览" is_collapsed=is_collapsed>
-                    <NavItem href="/" icon=Icon::Dashboard label="仪表盘" is_active=move || location.pathname.get() == "/" is_collapsed=is_collapsed/>
-                    <NavItem href="/servers" icon=Icon::Server label="服务器管理" is_active=move || location.pathname.get() == "/servers" is_collapsed=is_collapsed/>
+                <NavSection title="概览">
+                    <NavItem href="/" icon=Icon::Dashboard label="仪表盘" is_active=move || location.pathname.get() == "/"/>
+                    <NavItem href="/servers" icon=Icon::Server label="服务器管理" is_active=move || location.pathname.get() == "/servers"/>
                 </NavSection>
 
-                <NavSection title="监控与告警" is_collapsed=is_collapsed>
-                    <NavItem href="/monitoring" icon=Icon::Monitor label="监控中心" is_active=move || location.pathname.get() == "/monitoring" is_collapsed=is_collapsed/>
-                    <NavItem href="/alerts" icon=Icon::Alert label="告警中心" is_active=move || location.pathname.get() == "/alerts" is_collapsed=is_collapsed/>
+                <NavSection title="监控与告警">
+                    <NavItem href="/monitoring" icon=Icon::Monitor label="监控中心" is_active=move || location.pathname.get() == "/monitoring"/>
+                    <NavItem href="/alerts" icon=Icon::Alert label="告警中心" is_active=move || location.pathname.get() == "/alerts"/>
                 </NavSection>
 
-                <NavSection title="运维工具" is_collapsed=is_collapsed>
-                    <NavItem href="/terminal" icon=Icon::Terminal label="Web终端" is_active=move || location.pathname.get() == "/terminal" is_collapsed=is_collapsed/>
-                    <NavItem href="/commands" icon=Icon::Command label="命令执行" is_active=move || location.pathname.get() == "/commands" is_collapsed=is_collapsed/>
-                    <NavItem href="/cronjobs" icon=Icon::Cronjob label="定时任务" is_active=move || location.pathname.get() == "/cronjobs" is_collapsed=is_collapsed/>
+                <NavSection title="运维工具">
+                    <NavItem href="/terminal" icon=Icon::Terminal label="Web终端" is_active=move || location.pathname.get() == "/terminal"/>
+                    <NavItem href="/commands" icon=Icon::Command label="命令执行" is_active=move || location.pathname.get() == "/commands"/>
+                    <NavItem href="/cronjobs" icon=Icon::Cronjob label="定时任务" is_active=move || location.pathname.get() == "/cronjobs"/>
                 </NavSection>
 
-                <NavSection title="服务管理" is_collapsed=is_collapsed>
-                    <NavItem href="/docker" icon=Icon::Docker label="容器管理" is_active=move || location.pathname.get() == "/docker" is_collapsed=is_collapsed/>
-                    <NavItem href="/database" icon=Icon::Database label="数据库" is_active=move || location.pathname.get() == "/database" is_collapsed=is_collapsed/>
-                    <NavItem href="/files" icon=Icon::Files label="文件管理" is_active=move || location.pathname.get() == "/files" is_collapsed=is_collapsed/>
+                <NavSection title="服务管理">
+                    <NavItem href="/docker" icon=Icon::Docker label="容器管理" is_active=move || location.pathname.get() == "/docker"/>
+                    <NavItem href="/database" icon=Icon::Database label="数据库" is_active=move || location.pathname.get() == "/database"/>
+                    <NavItem href="/files" icon=Icon::Files label="文件管理" is_active=move || location.pathname.get() == "/files"/>
                 </NavSection>
 
-                <NavSection title="安全与审计" is_collapsed=is_collapsed>
-                    <NavItem href="/firewall" icon=Icon::Firewall label="防火墙" is_active=move || location.pathname.get() == "/firewall" is_collapsed=is_collapsed/>
-                    <NavItem href="/audit" icon=Icon::Audit label="操作审计" is_active=move || location.pathname.get() == "/audit" is_collapsed=is_collapsed/>
-                    <NavItem href="/users" icon=Icon::Users label="用户权限" is_active=move || location.pathname.get() == "/users" is_collapsed=is_collapsed/>
+                <NavSection title="安全与审计">
+                    <NavItem href="/firewall" icon=Icon::Firewall label="防火墙" is_active=move || location.pathname.get() == "/firewall"/>
+                    <NavItem href="/audit" icon=Icon::Audit label="操作审计" is_active=move || location.pathname.get() == "/audit"/>
+                    <NavItem href="/users" icon=Icon::Users label="用户权限" is_active=move || location.pathname.get() == "/users"/>
                 </NavSection>
 
-                <NavSection title="系统" is_collapsed=is_collapsed>
-                    <NavItem href="/settings" icon=Icon::Settings label="系统设置" is_active=move || location.pathname.get() == "/settings" is_collapsed=is_collapsed/>
-                    <NavItem href="/example" icon=Icon::Example label="交互示例" is_active=move || location.pathname.get() == "/example" is_collapsed=is_collapsed/>
+                <NavSection title="系统">
+                    <NavItem href="/settings" icon=Icon::Settings label="系统设置" is_active=move || location.pathname.get() == "/settings"/>
+                    <NavItem href="/example" icon=Icon::Example label="交互示例" is_active=move || location.pathname.get() == "/example"/>
                 </NavSection>
             </nav>
         </aside>
@@ -193,12 +182,11 @@ fn Sidebar(
 #[component]
 fn NavSection(
     title: &'static str,
-    is_collapsed: ReadSignal<bool>,
     children: Children,
 ) -> impl IntoView {
     view! {
         <div>
-            <div class=move || format!("px-3 mb-2 transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 h-0 overflow-hidden" } else { "opacity-100 h-auto" })>
+            <div class="px-3 mb-2 sidebar-content">
                 <span class="text-xs font-semibold text-apple-secondaryLabel dark:text-apple-darkSecondaryLabel uppercase tracking-wider">
                     {title}
                 </span>
@@ -216,7 +204,6 @@ fn NavItem<F>(
     icon: Icon,
     label: &'static str,
     is_active: F,
-    is_collapsed: ReadSignal<bool>,
 ) -> impl IntoView
 where
     F: Fn() -> bool + Clone + 'static,
@@ -225,7 +212,7 @@ where
 
     view! {
         <A href=href class=move || {
-            let base = "group flex items-center gap-3 px-3 py-2 rounded-apple-xl font-medium transition-all duration-200";
+            let base = "group flex items-center gap-3 px-3 py-2 rounded-apple-xl font-medium transition-all duration-200 nav-item";
             if is_active() {
                 format!("{} bg-apple-blue text-white shadow-md shadow-apple-blue/20", base)
             } else {
@@ -241,18 +228,13 @@ where
             }>
                 {icon.svg()}
             </div>
-            <span class=move || format!("text-sm transition-all duration-300 {}", if is_collapsed.get() { "opacity-0 invisible w-0 overflow-hidden" } else { "opacity-100 visible w-auto" })>
-                {label}
-            </span>
+            <span class="text-sm nav-label whitespace-nowrap overflow-hidden transition-all duration-300">{label}</span>
         </A>
     }
 }
 
 #[component]
-fn Header(
-    #[prop(optional)] _is_collapsed: Option<ReadSignal<bool>>,
-    #[prop(optional)] _set_is_collapsed: Option<WriteSignal<bool>>,
-) -> impl IntoView {
+fn Header() -> impl IntoView {
 
     view! {
         <header class="sticky top-0 z-40 glass-card border-b border-apple-gray-200/50 dark:border-white/10 h-16 transition-all duration-300">

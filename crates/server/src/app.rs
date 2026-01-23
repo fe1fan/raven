@@ -103,13 +103,29 @@ pub fn App() -> impl IntoView {
                         localStorage.setItem('theme', 'dark');
                     }
                 };
+                window.toggleSidebar = function() {
+                    var html = document.documentElement;
+                    var isCollapsed = html.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem('sidebar-collapsed', isCollapsed);
+                };
+                // Restore sidebar state
+                if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
             })();
             "#
         </Script>
 
-        // 5. Global Styles for Glassmorphism
+        // 5. Global Styles for Glassmorphism & Sidebar
         <Style>
-            ".glass-card {
+            "
+            :root {
+                --sidebar-width: 16rem;
+            }
+            html.sidebar-collapsed {
+                --sidebar-width: 5rem;
+            }
+            .glass-card {
                 backdrop-filter: saturate(180%) blur(20px);
                 -webkit-backdrop-filter: saturate(180%) blur(20px);
             }
@@ -121,7 +137,16 @@ pub fn App() -> impl IntoView {
                 background: rgba(255, 255, 255, 0.7);
                 border: 1px solid rgba(0, 0, 0, 0.05);
                 box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-            }"
+            }
+
+            /* Sidebar Collapse Styles */
+            aside { width: var(--sidebar-width); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar-content { transition: opacity 0.3s, visibility 0.3s; }
+            html.sidebar-collapsed .sidebar-content { opacity: 0; visibility: hidden; width: 0; }
+            html.sidebar-collapsed .nav-label { opacity: 0; visibility: hidden; width: 0; }
+            html.sidebar-collapsed .collapse-icon { transform: rotate(180deg); }
+            html.sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+            "
         </Style>
 
         <Router>
